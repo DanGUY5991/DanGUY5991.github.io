@@ -1,17 +1,142 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Dan's Website</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    h1 { color: #1a73e8; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dan Pearson | Strategist, AI Adoption & Systems Thinking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
-  <h1>Welcome to My Website!</h1>
-  <p>This site is hosted on GitHub Pages.</p>
-  <p>More content coming soon...</p>
+  <div class="noise-overlay"></div>
+  <div class="background-gradients">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="logo">DP.</div>
+    <ul class="nav-links">
+      <li><a href="#about">Who I Am</a></li>
+      <li><a href="#sensemaking">My Approach</a></li>
+      <li><a href="#services">What I Do</a></li>
+      <li><a href="#projects">Work</a></li>
+      <li><a href="#thinking">Thinking</a></li>
+      <li><a href="#contact" class="btn-primary">Contact</a></li>
+    </ul>
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <main>
+    <section id="hero" class="hero-section">
+      <div class="hero-content">
+        <p class="overline">Strategist & Researcher</p>
+        <h1 id="hero-name">Dan Pearson</h1>
+        <h2 id="hero-role">Strategy, AI Adoption, Systems Thinking</h2>
+        <div class="hero-divider"></div>
+        <p id="hero-subtitle" class="subtitle">I help people make sense of complexity—so confusion becomes clarity, and
+          uncertainty becomes direction.</p>
+        <div class="cta-group">
+          <a href="#about" class="btn-primary">About Me</a>
+          <a href="#contact" class="btn-secondary">Get In Touch</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section glass-card">
+      <div class="section-header">
+        <span class="section-number">01</span>
+        <h3>Who I Am</h3>
+      </div>
+      <div class="about-content" id="about-container">
+        <!-- Populated by script.js -->
+      </div>
+    </section>
+
+    <!-- Sensemaking Approach (New) -->
+    <section id="sensemaking" class="section">
+      <div class="section-header">
+        <span class="section-number">02</span>
+        <h3>The Sensemaking Approach</h3>
+      </div>
+      <p id="sensemaking-intro" class="section-intro">
+        <!-- Populated -->
+      </p>
+      <div class="sensemaking-grid" id="sensemaking-grid">
+        <!-- Populated -->
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="section">
+      <div class="section-header">
+        <span class="section-number">03</span>
+        <h3>What I Do</h3>
+      </div>
+      <div class="services-grid" id="services-grid">
+        <!-- Populated by script.js -->
+      </div>
+    </section>
+
+    <!-- Projects / Work Section -->
+    <section id="projects" class="section glass-card">
+      <div class="section-header">
+        <span class="section-number">04</span>
+        <h3>Projects & Work</h3>
+      </div>
+      <p class="section-intro">Selected examples of privacy-safe case studies and research.</p>
+      <div class="projects-grid" id="projects-grid">
+        <!-- Populated by script.js -->
+      </div>
+    </section>
+
+    <!-- Writing & Thinking Section -->
+    <section id="thinking" class="section">
+      <div class="section-header">
+        <span class="section-number">05</span>
+        <h3>Writing & Thinking</h3>
+      </div>
+      <div class="writing-container" id="writing-container">
+        <!-- Populated by script.js -->
+      </div>
+    </section>
+
+    <!-- Ethics Statement -->
+    <section id="ethics" class="section ethics-card text-center">
+      <div id="ethics-content">
+        <!-- Populated by script.js -->
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section text-center">
+      <h3>Let's Connect</h3>
+      <p>Always open to discussing AI strategy, business policy, or new research opportunities.</p>
+      <div class="social-links-container" id="social-links">
+        <!-- Links -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Dan Pearson. All rights reserved.</p>
+  </footer>
+
+  <script src="content.js"></script>
+  <script src="script.js"></script>
 </body>
+
 </html>
