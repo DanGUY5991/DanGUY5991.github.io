@@ -5,7 +5,7 @@ const profileData = {
     socialLinks: {
         linkedin: "https://www.linkedin.com/in/dan-pearson-/",
         github: "https://github.com/DanGUY5991",
-        email: "mailto:contact@danpearson.example"
+        email: "mailto:D.Pearson@uleth.ca"
     },
     about: `
         <div class="about-block">

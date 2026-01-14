@@ -377,6 +377,12 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Contact Spacing */
+.social-links-container {
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+}
+
 /* Buttons */
 .btn-primary {
     display: inline-block;
