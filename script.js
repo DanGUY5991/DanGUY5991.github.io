@@ -37,8 +37,12 @@ function loadContent() {
     // --- Services ("What I Do") ---
     const servicesGrid = document.getElementById('services-grid');
     if (servicesGrid && profileData.services) {
-        servicesGrid.innerHTML = profileData.services.map(service => `
+        const icons = ['fa-chess-u', 'fa-robot', 'fa-microscope']; // Character-like icons
+        servicesGrid.innerHTML = profileData.services.map((service, index) => `
             <div class="service-card glass-panel">
+                <div class="card-character-container">
+                    <i class="fas ${icons[index]} card-character-icon anim-float"></i>
+                </div>
                 <h4>${service.category}</h4>
                 <ul>
                     ${service.items.map(item => `<li><i class="fas fa-check-circle"></i> ${item}</li>`).join('')}
@@ -50,8 +54,12 @@ function loadContent() {
     // --- Projects ("Work") ---
     const projectsGrid = document.getElementById('projects-grid');
     if (projectsGrid && profileData.projects) {
-        projectsGrid.innerHTML = profileData.projects.map(project => `
+        const projIcons = ['fa-briefcase', 'fa-chalkboard-teacher', 'fa-file-alt'];
+        projectsGrid.innerHTML = profileData.projects.map((project, index) => `
             <div class="project-card">
+               <div class="card-character-container">
+                    <i class="fas ${projIcons[index]} card-character-icon anim-pulse"></i>
+                </div>
                 <span class="project-type">${project.type}</span>
                 <h4>${project.title}</h4>
                 <p>${project.desc}</p>
