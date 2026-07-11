@@ -1,8 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+    setupEntryAnimation();
     loadContent();
     setupSmoothScroll();
     setupAnimations();
 });
+
+
+function setupEntryAnimation() {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const entryAnimation = document.querySelector('.entry-animation');
+
+    if (prefersReducedMotion) {
+        document.body.classList.remove('is-entering');
+        if (entryAnimation) entryAnimation.remove();
+        return;
+    }
+
+    document.body.classList.add('is-entering');
+
+    window.setTimeout(() => {
+        document.body.classList.remove('is-entering');
+        if (entryAnimation) entryAnimation.remove();
+    }, 2100);
+}
 
 function loadContent() {
     if (typeof profileData === 'undefined') return;
