@@ -100,6 +100,25 @@ a {
     color: #ffffff;
 }
 
+
+.plain-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.plain-portrait {
+    width: 220px;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center top;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
 main {
     width: min(var(--max-width), calc(100% - 2.5rem));
     margin: 0 auto;
@@ -250,5 +269,13 @@ main {
 
     .plain-hero {
         padding-top: 3.5rem;
+    }
+
+    .plain-hero-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .plain-portrait {
+        width: min(72vw, 260px);
     }
 }
