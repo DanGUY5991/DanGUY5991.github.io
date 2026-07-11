@@ -327,6 +327,32 @@ body.is-entering {
     letter-spacing: 1px;
 }
 
+.nav-brand-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mode-switch {
+    border: 1px solid rgba(248, 250, 252, 0.18);
+    border-radius: 999px;
+    color: var(--text-primary);
+    background: rgba(248, 250, 252, 0.06);
+    padding: 0.45rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    text-decoration: none;
+    transition: 0.25s ease;
+}
+
+.mode-switch:hover {
+    border-color: var(--accent-1);
+    color: var(--accent-1);
+    background: rgba(56, 189, 248, 0.1);
+}
+
 .logo a {
     text-decoration: none;
     color: inherit;
@@ -1201,5 +1227,16 @@ body.is-entering {
         height: auto;
         min-height: 200px;
         margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .nav-brand-group {
+        gap: 0.55rem;
+    }
+
+    .mode-switch {
+        padding: 0.4rem 0.65rem;
+        font-size: 0.7rem;
     }
 }
