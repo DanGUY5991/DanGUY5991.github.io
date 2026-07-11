@@ -37,12 +37,36 @@ body.is-entering {
     z-index: 3000;
     display: grid;
     place-items: center;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+    animation: entryShell 2.65s linear forwards;
+}
+
+.entry-animation::before,
+.entry-animation::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50.5%;
     background:
         radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.22), transparent 34%),
         radial-gradient(circle at 58% 56%, rgba(129, 140, 248, 0.22), transparent 32%),
         var(--bg-color);
-    pointer-events: none;
-    animation: entryExit 1.9s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+    box-shadow: inset 0 0 120px rgba(248, 250, 252, 0.04);
+    z-index: 0;
+    animation: curtainOpen 1s 1.55s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+}
+
+.entry-animation::before {
+    left: 0;
+    transform-origin: left center;
+}
+
+.entry-animation::after {
+    right: 0;
+    transform-origin: right center;
 }
 
 .entry-animation__halo {
@@ -54,7 +78,8 @@ body.is-entering {
     box-shadow:
         0 0 80px rgba(56, 189, 248, 0.18),
         inset 0 0 80px rgba(129, 140, 248, 0.08);
-    animation: haloResolve 1.6s ease-out forwards;
+    z-index: 1;
+    animation: haloResolve 1.45s ease-out forwards, softFade 0.55s 1.38s ease-in forwards;
 }
 
 .entry-animation__mark {
@@ -66,7 +91,7 @@ body.is-entering {
     letter-spacing: 0;
     color: var(--text-primary);
     text-shadow: 0 0 32px rgba(56, 189, 248, 0.34);
-    animation: markResolve 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: markResolve 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards, softFade 0.5s 1.42s ease-in forwards;
 }
 
 .entry-animation__line {
@@ -76,19 +101,21 @@ body.is-entering {
     background: linear-gradient(90deg, transparent, var(--accent-1), var(--accent-2), transparent);
     transform: translateY(5.6rem) scaleX(0);
     transform-origin: center;
+    z-index: 1;
     animation: lineReveal 1.15s 0.22s ease-out forwards;
 }
 
 .entry-animation p {
     position: absolute;
     top: calc(50% + 6.4rem);
+    z-index: 1;
     color: var(--text-secondary);
     font-size: clamp(0.78rem, 2vw, 1rem);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.18rem;
     opacity: 0;
-    animation: captionReveal 0.9s 0.45s ease-out forwards;
+    animation: captionReveal 0.9s 0.45s ease-out forwards, softFade 0.45s 1.38s ease-in forwards;
 }
 
 .hero-content > * {
@@ -98,39 +125,63 @@ body.is-entering {
 }
 
 .hero-content .overline {
-    animation-delay: 1.35s;
+    animation-delay: 2.05s;
 }
 
 .hero-content h1 {
-    animation-delay: 1.48s;
+    animation-delay: 2.16s;
 }
 
 .hero-content h2 {
-    animation-delay: 1.6s;
+    animation-delay: 2.27s;
 }
 
 .hero-divider {
-    animation-delay: 1.72s;
+    animation-delay: 2.38s;
 }
 
 .hero-content .subtitle {
-    animation-delay: 1.84s;
+    animation-delay: 2.49s;
 }
 
 .hero-content .cta-group {
-    animation-delay: 1.96s;
+    animation-delay: 2.6s;
 }
 
-@keyframes entryExit {
+@keyframes entryShell {
     0%,
-    72% {
-        opacity: 1;
+    98% {
         visibility: visible;
     }
 
     100% {
-        opacity: 0;
         visibility: hidden;
+    }
+}
+
+@keyframes curtainOpen {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    72% {
+        opacity: 0.92;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(var(--curtain-shift, -102%));
+    }
+}
+
+.entry-animation::after {
+    --curtain-shift: 102%;
+}
+
+@keyframes softFade {
+    100% {
+        opacity: 0;
     }
 }
 

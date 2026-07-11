@@ -21,7 +21,7 @@ function setupEntryAnimation() {
     window.setTimeout(() => {
         document.body.classList.remove('is-entering');
         if (entryAnimation) entryAnimation.remove();
-    }, 2100);
+    }, 2800);
 }
 
 function loadContent() {
