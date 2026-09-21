@@ -9,7 +9,6 @@
   const Modules = window.LDMLFNModules;
   const Goals = window.LDMLFNSurveyGoals;
   const Clarify = window.LDMLFNClarify;
-  const AI_ENDPOINT_KEY = "ldmlfn-ai-endpoint";
 
   // Pilot: cross-person coordinated questions stay off until consent design is approved.
   const CROSS_PERSON_SUPPLEMENTAL = false;
@@ -89,15 +88,17 @@
   }
 
   function requireProfile() {
-    return Profiles?.getCurrent() || null;
+    return Profiles?.isSignedIn() ? Profiles.getCurrent() : null;
   }
 
   function save() {
     if (!requireProfile()) return;
-    Profiles.saveSession(session);
+    Profiles.saveSession(session).catch(() => {
+      /* ignore transient encrypt failures */
+    });
   }
 
-  function load() {
+  async function load() {
     if (!requireProfile()) return null;
     return Profiles.loadSession();
   }
@@ -188,12 +189,11 @@
     }
   }
 
-  function enterAppShell(result) {
+  async function enterAppShell(result) {
     refreshUserChrome();
-    Profiles.adoptLegacySessionIfEmpty();
 
     const person = Profiles.getCurrent();
-    const saved = load();
+    const saved = await load();
 
     // If a saved session belongs to a module, keep that module selected for resume.
     if (saved?.goalId && Modules.get(saved.goalId)) {
@@ -648,7 +648,7 @@
   }
 
   function resetDialogueOnly() {
-    clearSaved();
+    Profiles.clearSession();
     session = createSession();
     els.thread.innerHTML = "";
     els.copyStatus.textContent = "";
@@ -681,31 +681,72 @@
     }
   });
 
-  els.authForm?.addEventListener("submit", (e) => {
+  let authMode = "login";
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const isRegister = mode === "register";
+    document.getElementById("tab-login")?.classList.toggle("is-active", !isRegister);
+    document.getElementById("tab-register")?.classList.toggle("is-active", isRegister);
+    document.getElementById("tab-login")?.setAttribute("aria-selected", String(!isRegister));
+    document.getElementById("tab-register")?.setAttribute("aria-selected", String(isRegister));
+    const title = document.getElementById("auth-card-title");
+    const hint = document.getElementById("auth-card-hint");
+    const nameField = document.getElementById("auth-name-field");
+    const confirmField = document.getElementById("auth-confirm-field");
+    const submit = document.getElementById("auth-submit");
+    const password = document.getElementById("auth-password");
+    if (title) title.textContent = isRegister ? "Create account" : "Sign in";
+    if (hint) {
+      hint.textContent = isRegister
+        ? "Choose an email and password. Only you can open this account’s answers."
+        : "Use your email and password to open your own answers only.";
+    }
+    if (nameField) nameField.hidden = !isRegister;
+    if (confirmField) confirmField.hidden = !isRegister;
+    if (submit) submit.textContent = isRegister ? "Create account" : "Sign in";
+    if (password) password.autocomplete = isRegister ? "new-password" : "current-password";
+    if (els.authStatus) els.authStatus.textContent = "";
+  }
+
+  document.getElementById("tab-login")?.addEventListener("click", () => setAuthMode("login"));
+  document.getElementById("tab-register")?.addEventListener("click", () => setAuthMode("register"));
+
+  els.authForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     els.authStatus.textContent = "";
+    const email = els.authEmail.value;
+    const password = document.getElementById("auth-password")?.value || "";
+    const confirm = document.getElementById("auth-password-confirm")?.value || "";
+    const name = els.authName?.value || "";
+    const submitBtn = document.getElementById("auth-submit");
+    if (submitBtn) submitBtn.disabled = true;
     try {
-      const result = Profiles.signIn({
-        email: els.authEmail.value,
-        name: els.authName.value,
-      });
-      els.authStatus.textContent = result.isNew
-        ? "Profile created. You’re in."
-        : "Welcome back — continuing your profile.";
-      enterAppShell(result);
+      let result;
+      if (authMode === "register") {
+        if (password !== confirm) throw new Error("Passwords do not match.");
+        result = await Profiles.register({ email, name, password });
+        els.authStatus.textContent = "Account created. You’re signed in.";
+      } else {
+        result = await Profiles.login({ email, password });
+        els.authStatus.textContent = "Signed in — opening your account only.";
+      }
+      await enterAppShell(result);
     } catch (err) {
       els.authStatus.textContent = err.message || "Could not sign in.";
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 
   els.signout?.addEventListener("click", signOutToAuth);
 
-  els.begin.addEventListener("click", () => {
+  els.begin.addEventListener("click", async () => {
     if (!requireProfile()) {
       showPanel("auth");
       return;
     }
-    clearSaved();
+    await Profiles.clearSession();
     if (!Profiles.hasBio()) {
       showBioThenStart();
       return;
@@ -733,12 +774,11 @@
     showPanel("landing");
   });
 
-  // Allow editing bio from landing
   els.editBio?.addEventListener("click", showBioThenStart);
   window.LDMLFNEditBio = showBioThenStart;
 
-  els.resume?.addEventListener("click", () => {
-    const saved = load();
+  els.resume?.addEventListener("click", async () => {
+    const saved = await load();
     if (!saved) return;
     if (saved.goalId && Modules.get(saved.goalId)) {
       Modules.setSelected(saved.goalId);
@@ -767,9 +807,6 @@
   });
 
   const params = new URLSearchParams(window.location.search);
-  if (params.has("fresh") || params.has("clear")) {
-    if (requireProfile()) clearSaved();
-  }
   if (params.has("signout")) Profiles.signOut();
   if (params.has("fresh") || params.has("clear") || params.has("signout")) {
     if (window.history.replaceState) {
@@ -777,20 +814,19 @@
     }
   }
 
-  if (requireProfile()) {
-    enterAppShell({ action: "continue", isNew: false });
-  } else {
-    refreshUserChrome();
-    showPanel("auth");
-  }
+  // Password auth keeps the key in memory only — always start at sign-in after refresh.
+  refreshUserChrome();
+  showPanel("auth");
+  setAuthMode("login");
 
   window.LDMLFN = {
     setAiEndpoint(url) {
-      if (!url) localStorage.removeItem(AI_ENDPOINT_KEY);
-      else localStorage.setItem(AI_ENDPOINT_KEY, url);
-      return Boolean(localStorage.getItem(AI_ENDPOINT_KEY));
+      return Profiles.setAiEndpoint(url);
     },
-    setSyncEndpoint: Profiles.setSyncEndpoint,
+    setFacilitatorSecret: (s) => Profiles.setFacilitatorSecret(s),
+    unlockFacilitator: (s) => Profiles.verifyFacilitatorSecret(s),
+    adminResetPassword: (email, pw, secret) => Profiles.adminResetPassword(email, pw, secret),
+    setSyncEndpoint: (...args) => Profiles.setSyncEndpoint(...args),
     exportSession: buildExport,
     listPeople: () => Profiles.listPeople(),
     activeGoal: () => goal(),

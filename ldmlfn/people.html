@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>People &amp; Access | LDMLFN Microtraining</title>
-  <meta name="description" content="Visible roster of people who have accessed LDMLFN Microtraining.">
+  <meta name="description" content="Facilitator roster for LDMLFN Microtraining.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -28,17 +28,42 @@
       <span class="topbar__sub">People</span>
     </div>
     <div class="topbar__actions">
-      <a class="text-link" href="index.html">Back to dialogue</a>
+      <a class="text-link" href="index.html">Back to survey</a>
     </div>
   </header>
 
   <main class="shell">
-    <section class="panel is-active">
-      <p class="eyebrow">Visible access roster</p>
+    <section class="panel is-active" id="facilitator-gate">
+      <p class="eyebrow">Facilitator access</p>
+      <h1>People roster</h1>
+      <p class="lede">
+        This page is for facilitators only. Participants cannot open other people’s answers from here.
+        Unlock with the facilitator secret, then view attendance metadata (not full transcripts).
+      </p>
+      <form class="auth-card" id="facilitator-form">
+        <label class="field" for="facilitator-secret">
+          <span>Facilitator secret</span>
+          <input type="password" id="facilitator-secret" required minlength="8" autocomplete="current-password">
+        </label>
+        <p class="auth-status" id="facilitator-status" role="status"></p>
+        <div class="cta-row">
+          <button type="submit" class="primary-btn">Unlock roster</button>
+        </div>
+        <p class="fine-print">
+          First time on this browser: set a secret in the console with
+          <code>LDMLFNProfiles.setFacilitatorSecret("your-secret")</code>, then unlock here.
+          To reset a participant password:
+          <code>LDMLFN.adminResetPassword("email@example.org", "new-password", "your-secret")</code>
+          (clears that account’s encrypted answers).
+        </p>
+      </form>
+    </section>
+
+    <section class="panel" id="roster-panel" hidden>
+      <p class="eyebrow">Facilitator roster</p>
       <h1>People who have signed in</h1>
       <p class="lede">
-        Names and emails are listed openly so facilitators can see who has accessed the microtraining.
-        Dialogue answers stay inside each person’s own profile — this page never opens another user’s session.
+        Attendance metadata only. Full answers stay encrypted inside each account.
       </p>
 
       <div class="access-link-card">
@@ -68,7 +93,7 @@
           </thead>
           <tbody id="people-body">
             <tr>
-              <td colspan="5">Loading…</td>
+              <td colspan="6">Loading…</td>
             </tr>
           </tbody>
         </table>
@@ -76,15 +101,11 @@
 
       <h2 class="section-heading">Recent access log</h2>
       <ul class="access-log" id="access-log"></ul>
-      <p class="fine-print">
-        Roster data lives in this browser’s profile registry (and any sync endpoint you configure).
-        To continue a dialogue, sign in on the access link with that person’s email — there is no cross-profile open.
-      </p>
     </section>
   </main>
 
   <footer class="foot">
-    <p>LDMLFN Microtraining · People &amp; access</p>
+    <p>LDMLFN Microtraining · Facilitator people &amp; access</p>
   </footer>
 
   <script src="profiles.js"></script>

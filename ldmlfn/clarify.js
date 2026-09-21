@@ -114,8 +114,9 @@
   }
 
   async function remoteCraft(mode, payload) {
-    const endpoint = localStorage.getItem(AI_ENDPOINT_KEY);
+    const endpoint = global.LDMLFNProfiles?.getAiEndpoint?.() || localStorage.getItem(AI_ENDPOINT_KEY);
     if (!endpoint) return null;
+    if (!global.LDMLFNProfiles?.isSignedIn?.()) return null;
 
     try {
       const res = await fetch(endpoint, {

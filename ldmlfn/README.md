@@ -10,46 +10,42 @@ See:
 
 ## Host on GitHub Pages
 
-This repo is already a GitHub Pages site (`DanGUY5991.github.io`), published from the **`main`** branch.
-
 | Item | Value |
 | --- | --- |
 | Live survey URL (after merge to `main`) | https://danguy5991.github.io/ldmlfn/ |
-| Local folder | `F:\DanGUY5991.github.io\ldmlfn` (or `/ldmlfn` in the repo) |
 | Stack | Static HTML / CSS / JS only |
-| Build / deploy command | None — push HTML to `main` |
+| Build / deploy | None — push to `main` |
 
-### Publish steps
+## Accounts (email + password)
 
-1. Merge the feature branch into `main` (or copy/update `ldmlfn/` on `main`).
-2. Wait for Pages to rebuild (usually under a minute).
-3. Open https://danguy5991.github.io/ldmlfn/
-4. Share that link as the participant access link.
+1. **Create account** — email, display name, password (min 8 chars)  
+2. **Sign in** — only that password opens that account’s answers  
+3. Answers are **encrypted at rest** in the browser with a key derived from the password  
+4. Password forgotten → facilitator resets it (clears that account’s encrypted answers)
 
-### Why this works for a survey
+### Facilitator commands (browser console)
 
-- No server, database, or Node build required  
-- Relative paths (`styles.css`, `app.js`, `modules/…`) work under `/ldmlfn/`  
-- Answers stay in the participant’s browser (`localStorage`) unless you later add an approved share/export path  
+```js
+await LDMLFN.setFacilitatorSecret("your-long-secret")   // first time on this browser
+await LDMLFN.unlockFacilitator("your-long-secret")
+await LDMLFN.adminResetPassword("person@example.org", "TempPass123", "your-long-secret")
 
-### Local check before push
+// AI: set a proxy URL only — never embed a provider API key in this static site
+LDMLFN.setAiEndpoint("https://your-proxy.example.com/ldmlfn")
+```
+
+People roster: `/ldmlfn/people.html` (facilitator secret required).
+
+### Security notes (honest)
+
+- Stops other accounts from opening someone’s answers on this public HTML app  
+- AI endpoint config is facilitator-gated; unsigned visitors cannot set it  
+- This is **browser-side** protection suitable for GitHub Pages — not a full server auth system  
+- Prefer a server proxy for any real AI provider keys  
+
+## Local check
 
 ```bash
 npx serve .
 # open http://localhost:3000/ldmlfn/
 ```
-
-Or on Windows, open `ldmlfn\index.html` in a browser (some browsers restrict modules/`localStorage` quirks with `file://` — a local static server is more reliable).
-
-## Pilot principles
-
-1. Transparent purpose — software and work relationships when relevant  
-2. Strengths and useful work first  
-3. Optional follow-ups — Skip / Continue / Correct  
-4. Editable draft summary — not an assessment  
-5. Cross-person coordination off until approved  
-6. Clear notice of who can see what and where data lives  
-
-## Note on identity
-
-Email sign-in is a convenience to return to a draft on that browser. It is **not** secure authentication.

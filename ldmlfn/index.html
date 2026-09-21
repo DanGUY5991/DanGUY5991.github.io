@@ -29,7 +29,7 @@
       <span class="topbar__sub">Microtraining</span>
     </div>
     <div class="topbar__actions">
-      <a class="text-link topbar__people" href="people.html">People</a>
+      <a class="text-link topbar__people" href="people.html" title="Facilitator access">Facilitator</a>
       <span class="topbar__user" id="user-chip" hidden></span>
       <button type="button" class="ghost-btn" id="signout-btn" hidden>Sign out</button>
       <button type="button" class="ghost-btn" id="restart-btn" hidden>Start over</button>
@@ -39,12 +39,11 @@
   <main class="shell">
     <!-- Access / login -->
     <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
-      <p class="eyebrow">Microsoft product listening survey</p>
+      <p class="eyebrow">Listening &amp; training-needs tool</p>
       <h1 id="auth-title">LDMLFN Microtraining</h1>
       <p class="lede">
-        Sign in with your email to create a profile or continue where you left off.
-        Choose a product module, answer simple questions about challenges and understanding,
-        then get one clarifying follow-up crafted from each answer.
+        Create an account with your email and a password, or sign in to continue your own draft.
+        Your answers stay with your account — other people cannot open them with their login.
       </p>
 
       <div class="access-link-card" id="access-link-card">
@@ -56,9 +55,14 @@
         <p class="fine-print" id="copy-link-status" role="status"></p>
       </div>
 
-      <form class="auth-card" id="auth-form" autocomplete="off">
-        <h2 class="auth-card__title">Simple sign-in</h2>
-        <p class="auth-card__hint">Use the same email later to continue your profile.</p>
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true">Sign in</button>
+        <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <form class="auth-card" id="auth-form" autocomplete="on">
+        <h2 class="auth-card__title" id="auth-card-title">Sign in</h2>
+        <p class="auth-card__hint" id="auth-card-hint">Use your email and password to open your own answers only.</p>
 
         <label class="field" for="auth-email">
           <span>Email</span>
@@ -66,19 +70,32 @@
             placeholder="you@organization.org" autocomplete="username" inputmode="email" spellcheck="false">
         </label>
 
-        <label class="field" for="auth-name">
+        <label class="field" for="auth-name" id="auth-name-field" hidden>
           <span>Display name</span>
           <input type="text" id="auth-name" name="displayName" placeholder="How should we greet you?" autocomplete="nickname">
+        </label>
+
+        <label class="field" for="auth-password">
+          <span>Password</span>
+          <input type="password" id="auth-password" name="password" required minlength="8"
+            placeholder="At least 8 characters" autocomplete="current-password">
+        </label>
+
+        <label class="field" for="auth-password-confirm" id="auth-confirm-field" hidden>
+          <span>Confirm password</span>
+          <input type="password" id="auth-password-confirm" name="passwordConfirm" minlength="8"
+            placeholder="Re-enter password" autocomplete="new-password">
         </label>
 
         <p class="auth-status" id="auth-status" role="status"></p>
 
         <div class="cta-row">
-          <button type="submit" class="primary-btn" id="auth-submit">Enter with this email</button>
+          <button type="submit" class="primary-btn" id="auth-submit">Sign in</button>
         </div>
         <p class="fine-print">
-          No password — your email is your profile key. Names and emails appear on the shared people list;
-          dialogue answers stay inside your profile only.
+          Passwords are stored as a one-way hash on this device. If you forget your password,
+          ask the facilitator to reset it (your previous encrypted answers for that account will be cleared).
+          Do not reuse an important password. AI settings are facilitator-only and are not available to public visitors.
         </p>
       </form>
     </section>
