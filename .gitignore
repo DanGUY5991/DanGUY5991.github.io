@@ -1,0 +1,5 @@
+# Local preparation, browser output and private workspace guidance
+output/
+.playwright-cli/
+.ai/
+PROJECT_CONTEXT.md
