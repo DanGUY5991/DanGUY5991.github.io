@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="640" viewBox="0 0 800 640" role="img" aria-labelledby="title desc">
+<title id="title">Kevin and Gary — a case about music, domain expertise and AI</title>
+<desc id="desc">Original website illustration with a sound waveform and the words Kevin and Gary. Not the publisher's cover.</desc>
+<rect width="800" height="640" fill="#203b35"/>
+<circle cx="670" cy="125" r="220" fill="none" stroke="#50665c"/>
+<circle cx="670" cy="125" r="170" fill="none" stroke="#50665c"/>
+<circle cx="670" cy="125" r="120" fill="none" stroke="#50665c"/>
+<text x="58" y="80" fill="#dae1d7" font-family="Arial,sans-serif" font-size="17" letter-spacing="3">A PUBLISHED CASE · 2026</text>
+<text x="54" y="217" fill="#f5f2eb" font-family="Georgia,serif" font-size="88">Kevin &amp; Gary</text>
+<text x="58" y="274" fill="#dae1d7" font-family="Arial,sans-serif" font-size="24">Music. Domain expertise. Generative AI.</text>
+<g stroke="#d79b7c" stroke-width="8" stroke-linecap="round">
+<path d="M62 377v22m24-43v64m24-90v116m24-74v32m24-91v150m24-122v94m24-69v45m24-17v-11m24-30v70m24-117v164m24-185v206m24-175v144m24-112v78m24-47v17m24-30v44m24-89v132m24-170v208m24-186v163m24-135v105m24-76v49m24-16v-16m24-34v80m24-121v163m24-137v110m24-81v50m24-34v19m24-6v-7"/>
+</g>
+<path d="M58 534H742" stroke="#789084"/>
+<text x="58" y="575" fill="#f5f2eb" font-family="Arial,sans-serif" font-size="19">Sidney Shapiro &amp; Daniel Pearson</text>
+<text x="58" y="608" fill="#dae1d7" font-family="Arial,sans-serif" font-size="16">Published in Rutgers Business Review</text>
+</svg>
