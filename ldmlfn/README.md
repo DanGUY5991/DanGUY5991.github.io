@@ -42,7 +42,7 @@ Dialogue is shaped by Indigenous-informed knowledge practices applied carefully:
 4. **Clarify with care** — follow-ups seek missing context, not interrogation
 5. **Gratitude and reciprocity** — closing names what was shared and what comes next
 
-See also `PROJECT-GUIDANCE.md` for structural decisions.
+See also [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — high-level ideas & functions that guide code structure.
 
 ## Run locally
 

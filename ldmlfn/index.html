@@ -55,18 +55,19 @@
         <p class="fine-print" id="copy-link-status" role="status"></p>
       </div>
 
-      <form class="auth-card" id="auth-form" autocomplete="on">
+      <form class="auth-card" id="auth-form" autocomplete="off">
         <h2 class="auth-card__title">Simple sign-in</h2>
         <p class="auth-card__hint">Use the same email later to continue your profile.</p>
 
-        <label class="field">
+        <label class="field" for="auth-email">
           <span>Email</span>
-          <input type="email" id="auth-email" name="email" required placeholder="you@organization.org" autocomplete="email">
+          <input type="email" id="auth-email" name="email" required
+            placeholder="you@organization.org" autocomplete="username" inputmode="email" spellcheck="false">
         </label>
 
-        <label class="field">
+        <label class="field" for="auth-name">
           <span>Display name</span>
-          <input type="text" id="auth-name" name="name" placeholder="How should we greet you?" autocomplete="name">
+          <input type="text" id="auth-name" name="displayName" placeholder="How should we greet you?" autocomplete="nickname">
         </label>
 
         <p class="auth-status" id="auth-status" role="status"></p>
