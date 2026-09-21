@@ -37,7 +37,10 @@ A SharePoint-first listening survey (more Microsoft app goals later) that:
 3. **Relation before extraction** — clarify with care; no skill scores
 4. **Visible people, private answers** — roster shows who joined; dialogues stay isolated by email
 
-See also [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — high-level ideas & functions that guide code structure.
+See also:
+- [`UNDERSTANDING.md`](./UNDERSTANDING.md) — current project understanding for review
+- [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — high-level ideas & functions that guide code structure
+
 
 ## Run locally
 
