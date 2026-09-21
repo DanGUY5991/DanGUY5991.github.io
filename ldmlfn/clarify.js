@@ -51,15 +51,15 @@
 
     /** Prefer theme-tuned clarifiers; always bend toward culture / relationships / Indigenous understanding. */
     let probe;
-    if (themes.includes("people") || question.id === "sp-who") {
+    if (themes.includes("access") || themes.includes("trust")) {
       probe =
-        `To understand that more clearly: how do relationships around ${app} shape who gets heard, who holds the knowledge, and who feels responsible when something goes missing or unclear?`;
+        `What does that challenge reveal about trust and accountability in your setting — whose understanding of ${app} counts, and how are people cared for when access or information feels uncertain?`;
     } else if (themes.includes("finding") || themes.includes("structure")) {
       probe =
         `Can you say a little more about the culture of how knowledge is kept in ${app} — whose pathways people actually trust, and what that means for relationships when someone new needs to find their way?`;
-    } else if (themes.includes("access") || themes.includes("trust")) {
+    } else if (themes.includes("people") || question.id === "sp-who") {
       probe =
-        `What does that challenge reveal about trust and accountability in your setting — whose understanding of ${app} counts, and how are people cared for when access or information feels uncertain?`;
+        `To understand that more clearly: how do relationships around ${app} shape who gets heard, who holds the knowledge, and who feels responsible when something goes missing or unclear?`;
     } else if (themes.includes("knowing")) {
       probe =
         `Where does understanding of ${app} usually live among your people — in documents, in a few individuals, or in shared practice — and how does that affect belonging or confidence for others?`;
