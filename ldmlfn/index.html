@@ -39,11 +39,12 @@
   <main class="shell">
     <!-- Access / login -->
     <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
-      <p class="eyebrow">Access link</p>
+      <p class="eyebrow">SharePoint listening survey</p>
       <h1 id="auth-title">LDMLFN Microtraining</h1>
       <p class="lede">
         Sign in with your email to create a profile or continue where you left off.
-        Each profile keeps its own dialogue — people can see who has joined, but not each other’s answers.
+        This survey asks simple questions about SharePoint challenges and understanding —
+        then crafts one clarifying follow-up from each answer.
       </p>
 
       <div class="access-link-card" id="access-link-card">
@@ -84,32 +85,33 @@
 
     <!-- Landing -->
     <section class="panel panel--landing" id="panel-landing" aria-labelledby="landing-title" hidden>
-      <p class="eyebrow">Remote experience dialogue</p>
+      <p class="eyebrow">SharePoint · Microsoft application goal</p>
       <h1 id="landing-title">Welcome back</h1>
       <p class="lede" id="landing-lede">
-        A guided conversation that listens for your lived experience with Microsoft tools—
-        then gently clarifies context so training can meet you where you already stand.
+        Simple questions about SharePoint challenges and understanding.
+        After each answer, one AI-crafted follow-up clarifies culture, relationships,
+        and how people make sense of the situation.
       </p>
       <ul class="promise-list">
-        <li>Story before scores — we invite narrative, not checkbox expertise.</li>
-        <li>AI follows your thread — questions adapt to what you share.</li>
-        <li>Clarifying with care — reflections check understanding before moving on.</li>
+        <li>Straightforward first — every question starts plain and short.</li>
+        <li>One crafted follow-up — clarification is built from your answer.</li>
+        <li>Deeper listening — culture, relationships, and Indigenous understanding of the situation.</li>
       </ul>
       <div class="cta-row">
-        <button type="button" class="primary-btn" id="begin-btn">Begin the dialogue</button>
-        <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved dialogue</button>
+        <button type="button" class="primary-btn" id="begin-btn">Begin the SharePoint survey</button>
+        <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved survey</button>
         <a class="text-link" href="#how-it-works">How this works</a>
       </div>
       <aside class="how-card" id="how-it-works">
         <h2>How this works</h2>
         <p>
-          You share experiences in your own words. The guide reflects what it heard,
-          asks for missing context when something is unclear, and follows the products
-          and relationships that matter in your day-to-day work.
+          You answer a simple SharePoint question. The guide then crafts a follow-up
+          from what you said — still about SharePoint challenges or understanding,
+          while listening for culture, relationships, and Indigenous understanding of the situation.
         </p>
         <p class="fine-print">
           Your answers stay in your profile on this browser until you export them.
-          Other profiles cannot open your dialogue.
+          Other profiles cannot open your survey.
         </p>
       </aside>
     </section>
@@ -161,6 +163,8 @@
   </footer>
 
   <script src="profiles.js"></script>
+  <script src="survey-goals.js"></script>
+  <script src="clarify.js"></script>
   <script src="app.js"></script>
 </body>
 

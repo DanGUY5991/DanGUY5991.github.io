@@ -23,24 +23,19 @@ Open `/ldmlfn/people.html` for a **visible roster** of who has signed in (name, 
 
 ## What it is
 
-A browser-based microtraining intake form that:
+A SharePoint-first listening survey (more Microsoft app goals later) that:
 
-- Opens with relationship and context (not skill checkboxes)
-- Invites story about how Microsoft tools show up in real work
-- Uses an adaptive guide to reflect understanding and clarify vague answers
-- Deepens by product (Teams, Excel, Copilot, SharePoint, and more)
-- Closes with growth goals and preferred learning support
+- Asks **simple, straightforward** questions about SharePoint challenges and understanding
+- Crafts **one AI follow-up per answer** to clarify culture, relationships, and Indigenous understanding of the situation
+- Keeps answers in an email-based profile (create or continue)
 - Lets participants export an experience map as JSON
 
 ## Principles
 
-Dialogue is shaped by Indigenous-informed knowledge practices applied carefully:
-
-1. **Relation before extraction** — who you are in the work comes first
-2. **Story over scores** — narrative carries more usable truth than 1–5 ratings
-3. **Reflective listening** — the guide mirrors what it heard before asking more
-4. **Clarify with care** — follow-ups seek missing context, not interrogation
-5. **Gratitude and reciprocity** — closing names what was shared and what comes next
+1. **Surface vs depth** — feels like a SharePoint challenge/understanding survey; captures culture and relationships underneath
+2. **Simple Q → crafted clarify** — every initial answer gets one follow-up built from that answer
+3. **Relation before extraction** — clarify with care; no skill scores
+4. **Visible people, private answers** — roster shows who joined; dialogues stay isolated by email
 
 See also [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — high-level ideas & functions that guide code structure.
 

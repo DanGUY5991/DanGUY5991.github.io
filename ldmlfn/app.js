@@ -1,45 +1,14 @@
 /**
- * LDMLFN Microtraining — adaptive experience dialogue
- * Relational, story-first capture of Microsoft product experience.
- * Requires an email profile; sessions are isolated per profile.
+ * LDMLFN Microtraining — dialogue runner
+ * Active survey goal (SharePoint first): simple surface question →
+ * answer → AI-crafted clarifying follow-up → next question.
  */
 
 (() => {
   const Profiles = window.LDMLFNProfiles;
+  const Goals = window.LDMLFNSurveyGoals;
+  const Clarify = window.LDMLFNClarify;
   const AI_ENDPOINT_KEY = "ldmlfn-ai-endpoint";
-
-  const PRODUCTS = [
-    { id: "teams", labels: ["teams", "microsoft teams"], family: "collaboration" },
-    { id: "outlook", labels: ["outlook", "email", "calendar"], family: "communication" },
-    { id: "excel", labels: ["excel", "spreadsheet", "spreadsheets"], family: "data" },
-    { id: "word", labels: ["word", "documents", "docs"], family: "documents" },
-    { id: "powerpoint", labels: ["powerpoint", "power point", "pptx", "slides", "presentations"], family: "documents" },
-    { id: "sharepoint", labels: ["sharepoint", "share point"], family: "collaboration" },
-    { id: "onedrive", labels: ["onedrive", "one drive"], family: "storage" },
-    { id: "onenote", labels: ["onenote", "one note"], family: "documents" },
-    { id: "forms", labels: ["microsoft forms", "ms forms", "forms"], family: "data" },
-    { id: "powerbi", labels: ["power bi", "powerbi"], family: "data" },
-    { id: "powerautomate", labels: ["power automate", "powerautomate", "flow"], family: "automation" },
-    { id: "powerapps", labels: ["power apps", "powerapps"], family: "automation" },
-    { id: "copilot", labels: ["copilot", "co-pilot", "microsoft 365 copilot"], family: "ai" },
-    { id: "azure", labels: ["azure", "entra", "active directory", "azure ad"], family: "cloud" },
-    { id: "windows", labels: ["windows", "windows 11", "windows 10"], family: "platform" },
-    { id: "planner", labels: ["planner", "microsoft planner"], family: "collaboration" },
-    { id: "loop", labels: ["loop", "microsoft loop"], family: "collaboration" },
-    { id: "bookings", labels: ["bookings"], family: "communication" },
-    { id: "visio", labels: ["visio"], family: "documents" },
-    { id: "access", labels: ["access database", "ms access"], family: "data" },
-  ];
-
-  const STAGES = {
-    welcome: "Opening",
-    relation: "Relation",
-    landscape: "Landscape",
-    deepen: "Deepening",
-    clarify: "Clarifying",
-    horizons: "Horizons",
-    close: "Closing",
-  };
 
   const els = {
     auth: document.getElementById("panel-auth"),
@@ -62,7 +31,6 @@
     thread: document.getElementById("thread"),
     form: document.getElementById("reply-form"),
     input: document.getElementById("reply-input"),
-    label: document.getElementById("reply-label"),
     hint: document.getElementById("hint-text"),
     skip: document.getElementById("skip-btn"),
     send: document.getElementById("send-btn"),
@@ -77,6 +45,8 @@
     landingLede: document.getElementById("landing-lede"),
   };
 
+  const goal = Goals.getActiveGoal();
+
   let session = createSession();
   let busy = false;
 
@@ -84,25 +54,17 @@
     return {
       id: `ldmlfn-${Date.now().toString(36)}`,
       startedAt: new Date().toISOString(),
-      stage: "welcome",
+      goalId: goal.id,
+      application: goal.application,
+      stage: "intro",
+      /** @type {"surface"|"clarify"|"closing"} */
+      phase: "surface",
+      questionIndex: 0,
+      pendingQuestionId: null,
       turns: [],
-      context: {
-        relation: "",
-        landscape: "",
-        products: [],
-        productNotes: {},
-        strengths: [],
-        friction: [],
-        learningStyle: "",
-        goals: "",
-        supports: "",
-        reflections: [],
-        rawStories: [],
-      },
-      askedIds: [],
-      deepenCount: 0,
-      clarifyCount: 0,
-      pendingPrompt: null,
+      pairs: [],
+      currentPair: null,
+      closingAnswer: "",
     };
   }
 
@@ -157,8 +119,8 @@
       ? `Welcome, ${person.name}`
       : `Welcome back, ${person.name}`;
     els.landingLede.textContent = result?.isNew
-      ? "Your profile is ready. Begin when you want — this dialogue stays with your email only."
-      : "Your profile is open. Continue a saved dialogue or begin a new one — other people’s answers stay out of reach.";
+      ? `Your profile is ready for the ${goal.application} listening survey — simple questions, with one clarifying follow-up after each answer.`
+      : `Continue your ${goal.application} survey or begin again. Your answers stay with your email only.`;
 
     if (saved && saved.stage === "close" && saved.turns?.length) {
       session = saved;
@@ -179,11 +141,21 @@
   }
 
   function setProgress() {
-    const order = ["welcome", "relation", "landscape", "deepen", "clarify", "horizons", "close"];
-    const idx = Math.max(0, order.indexOf(session.stage));
-    const pct = Math.round((idx / (order.length - 1)) * 100);
+    const total = goal.questions.length * 2 + 2; // surface+clarify pairs + intro/close weight
+    let done = 0;
+    if (session.stage === "intro") done = 0;
+    else if (session.stage === "questions") {
+      done = session.questionIndex * 2 + (session.phase === "clarify" ? 1 : 0) + 1;
+    } else if (session.stage === "closing") done = total - 1;
+    else done = total;
+
+    const pct = Math.min(100, Math.round((done / total) * 100));
     els.progress.style.width = `${pct}%`;
-    els.stage.textContent = STAGES[session.stage] || "Dialogue";
+
+    if (session.phase === "clarify") els.stage.textContent = "Clarifying";
+    else if (session.stage === "closing") els.stage.textContent = "Closing";
+    else if (session.stage === "close") els.stage.textContent = "Complete";
+    else els.stage.textContent = `${goal.application} · Question ${Math.min(session.questionIndex + 1, goal.questions.length)}`;
   }
 
   function addBubble(role, text, kind = "") {
@@ -192,6 +164,8 @@
       text,
       kind,
       at: new Date().toISOString(),
+      phase: session.phase,
+      questionId: session.pendingQuestionId,
     };
     session.turns.push(turn);
     renderBubble(turn);
@@ -200,7 +174,7 @@
 
   function renderBubble(turn) {
     const div = document.createElement("div");
-    div.className = `bubble bubble--${turn.role}${turn.kind === "reflect" ? " reflect" : ""}`;
+    div.className = `bubble bubble--${turn.role}${turn.kind === "reflect" ? " reflect" : ""}${turn.kind === "clarify" ? " clarify" : ""}`;
     const who = document.createElement("span");
     who.className = "bubble__who";
     who.textContent = turn.role === "guide" ? "LDMLFN guide" : "You";
@@ -216,310 +190,80 @@
     session.turns.forEach(renderBubble);
   }
 
-  function detectProducts(text) {
-    const lower = text.toLowerCase();
-    const found = [];
-    for (const product of PRODUCTS) {
-      if (product.labels.some((label) => lower.includes(label))) {
-        found.push(product.id);
-      }
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function currentQuestion() {
+    return goal.questions[session.questionIndex] || null;
+  }
+
+  async function askSurfaceQuestion() {
+    const q = currentQuestion();
+    if (!q) {
+      await askClosing();
+      return;
     }
-    return [...new Set(found)];
-  }
-
-  function mergeProducts(ids) {
-    const set = new Set(session.context.products);
-    ids.forEach((id) => set.add(id));
-    session.context.products = [...set];
-  }
-
-  function wordCount(text) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-  }
-
-  function isVague(text) {
-    const t = text.trim().toLowerCase();
-    if (wordCount(t) < 8) return true;
-    const vaguePatterns = [
-      /^(yes|no|ok|okay|sure|idk|i don't know|not sure|maybe|fine|good|alright)[.!]?$/i,
-      /^(a bit|somewhat|kind of|sort of).{0,20}$/i,
-      /^(i use (it|them) (sometimes|a little|a bit)).{0,30}$/i,
-    ];
-    return vaguePatterns.some((re) => re.test(t));
-  }
-
-  function productDisplayName(id) {
-    const map = {
-      teams: "Microsoft Teams",
-      outlook: "Outlook",
-      excel: "Excel",
-      word: "Word",
-      powerpoint: "PowerPoint",
-      sharepoint: "SharePoint",
-      onedrive: "OneDrive",
-      onenote: "OneNote",
-      forms: "Microsoft Forms",
-      powerbi: "Power BI",
-      powerautomate: "Power Automate",
-      powerapps: "Power Apps",
-      copilot: "Microsoft Copilot",
-      azure: "Azure / Entra",
-      windows: "Windows",
-      planner: "Planner",
-      loop: "Microsoft Loop",
-      bookings: "Bookings",
-      visio: "Visio",
-      access: "Access",
+    session.stage = "questions";
+    session.phase = "surface";
+    session.pendingQuestionId = q.id;
+    session.currentPair = {
+      questionId: q.id,
+      surface: q.surface,
+      surfaceAnswer: "",
+      clarification: null,
+      clarifyAnswer: "",
     };
-    return map[id] || id;
-  }
-
-  function listProducts(ids) {
-    if (!ids.length) return "the Microsoft tools in your world";
-    if (ids.length === 1) return productDisplayName(ids[0]);
-    const names = ids.map(productDisplayName);
-    return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-  }
-
-  function extractSignals(text) {
-    const lower = text.toLowerCase();
-    const frictionWords = ["hard", "struggle", "confus", "frustrat", "don't know", "dont know", "overwhelming", "stuck", "barrier", "difficult", "avoid"];
-    const strengthWords = ["confident", "comfortable", "teach", "help others", "advanced", "expert", "daily", "every day", "love", "rely"];
-    const learningWords = ["watch", "video", "hands-on", "hands on", "try", "practice", "read", "mentor", "ask someone", "workshop", "self-paced"];
-
-    frictionWords.forEach((w) => {
-      if (lower.includes(w) && !session.context.friction.includes(w)) {
-        session.context.friction.push(w);
-      }
-    });
-    strengthWords.forEach((w) => {
-      if (lower.includes(w) && !session.context.strengths.includes(w)) {
-        session.context.strengths.push(w);
-      }
-    });
-    learningWords.forEach((w) => {
-      if (lower.includes(w) && !session.context.learningStyle) {
-        session.context.learningStyle = w;
-      }
-    });
-  }
-
-  function reflectOn(text, products) {
-    const short = text.trim().replace(/\s+/g, " ");
-    const snippet = short.length > 160 ? `${short.slice(0, 157)}…` : short;
-    if (products.length) {
-      const verb = products.length === 1 ? "is" : "are";
-      return `What I’m hearing is that ${listProducts(products)} ${verb} part of your path — especially around: “${snippet}”`;
-    }
-    return `I’m holding what you shared: “${snippet}” — thank you for offering that context.`;
-  }
-
-  function buildLocalPrompt() {
-    const ctx = session.context;
-    const asked = new Set(session.askedIds);
-
-    if (session.stage === "welcome" || !session.pendingPrompt) {
-      return {
-        id: "open-relation",
-        stage: "relation",
-        prompt:
-          "Before we talk about tools, I’d like to understand your relationship to this work.\n\nWhere do you sit in your organization or community, and what kinds of responsibilities tend to bring Microsoft tools into your day?",
-        hint: "Role, team, or community context is enough — titles are optional.",
-        allowSkip: false,
-      };
-    }
-
-    if (session.stage === "relation" && !asked.has("landscape")) {
-      return {
-        id: "landscape",
-        stage: "landscape",
-        prompt:
-          "Looking across the Microsoft landscape — Teams, Outlook, Excel, Word, PowerPoint, SharePoint, OneDrive, Power BI, Copilot, and others — which tools show up most in your real work?\n\nTell me a short story of a typical week, or of a moment that stayed with you.",
-        hint: "Name the tools in your own words. Stories carry more truth than skill ratings.",
-        allowSkip: false,
-      };
-    }
-
-    const lastYou = [...session.turns].reverse().find((t) => t.role === "you");
-    if (
-      lastYou &&
-      isVague(lastYou.text) &&
-      session.clarifyCount < 3 &&
-      session.stage !== "horizons"
-    ) {
-      session.clarifyCount += 1;
-      const focus = ctx.products[0] ? productDisplayName(ctx.products[0]) : "that tool";
-      return {
-        id: `clarify-${session.clarifyCount}`,
-        stage: "clarify",
-        prompt:
-          `I want to make sure I’m understanding clearly, not assuming.\n\nWhen you think of ${focus}, what does a real moment of use look like for you — who is involved, what are you trying to get done, and what feels easy or sticky?`,
-        hint: "Even one concrete example helps us design microtraining that fits.",
-        allowSkip: true,
-        isClarify: true,
-      };
-    }
-
-    const underexplored = ctx.products.filter((id) => !ctx.productNotes[id] || ctx.productNotes[id].length < 40);
-    if (underexplored.length && session.deepenCount < 4) {
-      const target = underexplored[0];
-      session.deepenCount += 1;
-      const angles = [
-        `With ${productDisplayName(target)}, what do you already do with confidence — and what still asks for patience or help?`,
-        `How does ${productDisplayName(target)} connect you to other people — teammates, learners, partners, or community?`,
-        `If someone walked beside you while you used ${productDisplayName(target)}, what would you want them to notice about how you work?`,
-        `What would make ${productDisplayName(target)} feel more like a helper and less like a hurdle in your week?`,
-      ];
-      return {
-        id: `deepen-${target}-${session.deepenCount}`,
-        stage: "deepen",
-        prompt: angles[(session.deepenCount - 1) % angles.length],
-        hint: "You can focus on one habit, one struggle, or one win.",
-        allowSkip: true,
-        productFocus: target,
-      };
-    }
-
-    if (!asked.has("gaps") && ctx.products.length) {
-      return {
-        id: "gaps",
-        stage: "deepen",
-        prompt:
-          "Are there Microsoft tools you’ve heard about but haven’t really walked with yet — Copilot, Power Automate, Power BI, SharePoint, or others?\n\nWhat keeps them at a distance: time, access, confidence, relevance, or something else?",
-        hint: "Distance is useful information for microtraining design.",
-        allowSkip: true,
-      };
-    }
-
-    if (!asked.has("horizons")) {
-      return {
-        id: "horizons",
-        stage: "horizons",
-        prompt:
-          "Looking ahead, what would you like LDMLFN microtraining to help you grow into?\n\nSpeak to the outcome that would feel meaningful — for your work, your learners, or your community — not just a feature list.",
-        hint: "Goals can be practical, relational, or both.",
-        allowSkip: false,
-      };
-    }
-
-    if (!asked.has("support")) {
-      return {
-        id: "support",
-        stage: "horizons",
-        prompt:
-          "How do you learn best when a tool is new — watching, trying beside someone, short practice tasks, written guides, or another way that works for you?",
-        hint: "This shapes how we package microtraining.",
-        allowSkip: true,
-      };
-    }
-
-    return { id: "done", stage: "close", done: true };
-  }
-
-  async function maybeRemoteAI(userText) {
-    const endpoint = localStorage.getItem(AI_ENDPOINT_KEY);
-    if (!endpoint) return null;
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "ldmlfn-microtraining",
-          principles: [
-            "relational before extractive",
-            "story over ratings",
-            "reflect understanding before probing",
-            "clarify context with care",
-            "honor lived Microsoft product experience",
-          ],
-          person: Profiles.getCurrentPublic(),
-          session: {
-            stage: session.stage,
-            context: session.context,
-            recentTurns: session.turns.slice(-8),
-          },
-          latestAnswer: userText,
-        }),
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (!data || !data.prompt) return null;
-      return {
-        id: data.id || `remote-${Date.now()}`,
-        stage: data.stage || session.stage,
-        prompt: data.prompt,
-        hint: data.hint || "Share what feels true.",
-        allowSkip: Boolean(data.allowSkip),
-        reflection: data.reflection || null,
-        done: Boolean(data.done),
-      };
-    } catch (_) {
-      return null;
-    }
-  }
-
-  async function nextGuideMove(userText) {
-    const remote = await maybeRemoteAI(userText);
-    if (remote) return remote;
-
-    const products = detectProducts(userText);
-    mergeProducts(products);
-    extractSignals(userText);
-
-    if (session.pendingPrompt?.productFocus) {
-      const pid = session.pendingPrompt.productFocus;
-      session.context.productNotes[pid] = `${session.context.productNotes[pid] || ""} ${userText}`.trim();
-    }
-
-    if (session.stage === "relation") {
-      session.context.relation = userText;
-    } else if (session.stage === "landscape") {
-      session.context.landscape = userText;
-      session.context.rawStories.push(userText);
-    } else if (session.pendingPrompt?.id === "horizons") {
-      session.context.goals = userText;
-    } else if (session.pendingPrompt?.id === "support") {
-      session.context.supports = userText;
-    } else {
-      session.context.rawStories.push(userText);
-    }
-
-    const local = buildLocalPrompt();
-    if (local.done) return local;
-
-    const shouldReflect =
-      !local.isClarify &&
-      userText &&
-      wordCount(userText) >= 6 &&
-      session.context.reflections.length < 5;
-
-    let reflection = null;
-    if (shouldReflect) {
-      reflection = reflectOn(userText, products.length ? products : session.context.products.slice(0, 3));
-      session.context.reflections.push(reflection);
-    }
-
-    return { ...local, reflection };
-  }
-
-  async function speakGuide(promptObj) {
-    if (promptObj.reflection) {
-      addBubble("guide", promptObj.reflection, "reflect");
-      await wait(480);
-    }
-    addBubble("guide", promptObj.prompt);
-    session.pendingPrompt = promptObj;
-    session.stage = promptObj.stage || session.stage;
-    if (promptObj.id) session.askedIds.push(promptObj.id);
-    els.hint.textContent = promptObj.hint || "Share what feels true.";
-    els.skip.hidden = !promptObj.allowSkip;
+    addBubble("guide", q.surface);
+    els.hint.textContent = q.hint || "A straightforward answer is enough.";
+    els.skip.hidden = true;
     setProgress();
     save();
   }
 
-  function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  async function askClarification(answer) {
+    const q = currentQuestion();
+    session.phase = "clarify";
+    setProgress();
+
+    const thinking = document.createElement("div");
+    thinking.className = "bubble bubble--guide";
+    thinking.innerHTML = '<span class="bubble__who">LDMLFN guide</span><p class="typing">Crafting a follow-up</p>';
+    els.thread.appendChild(thinking);
+
+    const crafted = await Clarify.craftFollowUp({
+      goal,
+      question: q,
+      answer,
+      person: Profiles.getCurrentPublic(),
+    });
+
+    thinking.remove();
+
+    if (crafted.reflection) {
+      addBubble("guide", crafted.reflection, "reflect");
+      await wait(400);
+    }
+
+    addBubble("guide", crafted.prompt, "clarify");
+    if (session.currentPair) {
+      session.currentPair.clarification = crafted;
+    }
+    els.hint.textContent = crafted.hint || "Add whatever clarifies the situation.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
+  }
+
+  async function askClosing() {
+    session.stage = "closing";
+    session.phase = "surface";
+    session.pendingQuestionId = "closing";
+    addBubble("guide", goal.closingPrompt);
+    els.hint.textContent = "Optional — share anything else that matters.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
   }
 
   async function startDialogue(resume = false) {
@@ -535,19 +279,21 @@
     if (!resume) {
       els.thread.innerHTML = "";
       const person = Profiles.getCurrent();
+      session = createSession();
       addBubble(
         "guide",
-        `Welcome, ${person.name}. This dialogue is a listening space for your experience with Microsoft products.\n\nWe’ll move at a human pace: relationship first, then the tools that live in your work, then the growth that would matter next.`
+        `Welcome, ${person.name}. ${goal.intro}`
       );
-      await wait(350);
-      const first = buildLocalPrompt();
-      await speakGuide(first);
+      await wait(400);
+      await askSurfaceQuestion();
     } else {
       restoreThread();
-      if (session.pendingPrompt) {
-        els.hint.textContent = session.pendingPrompt.hint || "Share what feels true.";
-        els.skip.hidden = !session.pendingPrompt.allowSkip;
-      }
+      els.hint.textContent =
+        session.phase === "clarify"
+          ? "Add whatever clarifies the situation."
+          : "A straightforward answer is enough.";
+      els.skip.hidden = session.phase !== "clarify" && session.stage !== "closing";
+      setProgress();
     }
   }
 
@@ -560,76 +306,73 @@
     els.send.disabled = true;
     els.skip.disabled = true;
 
-    if (!skipped) {
-      addBubble("you", cleaned);
-    } else {
-      addBubble("you", "(passing on this thread for now)");
-    }
+    if (!skipped) addBubble("you", cleaned);
+    else addBubble("you", "(passing on this follow-up for now)");
 
     els.input.value = "";
 
-    const thinking = document.createElement("div");
-    thinking.className = "bubble bubble--guide";
-    thinking.innerHTML = '<span class="bubble__who">LDMLFN guide</span><p class="typing">Listening</p>';
-    els.thread.appendChild(thinking);
-
-    await wait(650 + Math.min(900, cleaned.length * 8));
-
-    const move = await nextGuideMove(skipped ? session.context.landscape || "skipped" : cleaned);
-    thinking.remove();
-
-    if (move.done) {
-      finishSession();
-    } else {
-      await speakGuide(move);
+    try {
+      if (session.stage === "closing") {
+        session.closingAnswer = skipped ? "" : cleaned;
+        finishSession();
+      } else if (session.phase === "surface") {
+        if (session.currentPair) session.currentPair.surfaceAnswer = cleaned;
+        await askClarification(cleaned);
+      } else if (session.phase === "clarify") {
+        if (session.currentPair) {
+          session.currentPair.clarifyAnswer = skipped ? "" : cleaned;
+          session.pairs.push(session.currentPair);
+          session.currentPair = null;
+        }
+        session.questionIndex += 1;
+        if (session.questionIndex >= goal.questions.length) {
+          await askClosing();
+        } else {
+          await askSurfaceQuestion();
+        }
+      }
+    } finally {
+      busy = false;
+      els.send.disabled = false;
+      els.skip.disabled = false;
+      els.input.focus();
     }
-
-    busy = false;
-    els.send.disabled = false;
-    els.skip.disabled = false;
-    els.input.focus();
   }
 
   function finishSession() {
     session.stage = "close";
+    session.phase = "surface";
     setProgress();
     save();
     Profiles.markComplete();
     renderPortrait();
     showPanel("close");
-    const n = session.context.products.length;
-    els.closeSummary.textContent =
-      n > 0
-        ? `Your experience map names ${n} Microsoft product pathway${n === 1 ? "" : "s"} and the context around them. Review, export, or begin again.`
-        : "Your experience map captures the context you offered. Review, export, or begin again when you’re ready.";
+    els.closeSummary.textContent = `Your ${goal.application} listening map is ready — surface answers plus clarifying follow-ups about culture, relationships, and understanding.`;
   }
 
   function renderPortrait() {
-    const ctx = session.context;
     const person = Profiles.getCurrentPublic();
-    const chips = ctx.products.length
-      ? `<div class="chip-row">${ctx.products.map((p) => `<span class="chip">${productDisplayName(p)}</span>`).join("")}</div>`
-      : "<p>No specific Microsoft products named yet — relational context still captured.</p>";
-
-    const notes = Object.entries(ctx.productNotes)
-      .map(([id, note]) => `<li><strong>${productDisplayName(id)}:</strong> ${escapeHtml(truncate(note, 220))}</li>`)
+    const pairsHtml = session.pairs
+      .map((pair) => {
+        const q = goal.questions.find((item) => item.id === pair.questionId);
+        return `
+          <h4>${escapeHtml(q?.surface || pair.questionId)}</h4>
+          <p><strong>Answer:</strong> ${escapeHtml(truncate(pair.surfaceAnswer || "—", 280))}</p>
+          <p><strong>Clarification asked:</strong> ${escapeHtml(truncate(pair.clarification?.prompt || "—", 220))}</p>
+          <p><strong>Clarified:</strong> ${escapeHtml(truncate(pair.clarifyAnswer || "—", 280))}</p>
+        `;
+      })
       .join("");
 
     els.portrait.innerHTML = `
-      <h3>Experience portrait</h3>
+      <h3>${escapeHtml(goal.application)} experience portrait</h3>
       <h4>Profile</h4>
       <p>${escapeHtml(person?.name || "—")} · ${escapeHtml(person?.email || "—")}</p>
-      <h4>Relation</h4>
-      <p>${escapeHtml(ctx.relation || "Not yet described")}</p>
-      <h4>Microsoft landscape</h4>
-      ${chips}
-      <h4>Landscape story</h4>
-      <p>${escapeHtml(truncate(ctx.landscape || "—", 360))}</p>
-      ${notes ? `<h4>Deepened pathways</h4><ul>${notes}</ul>` : ""}
-      <h4>Growth horizon</h4>
-      <p>${escapeHtml(ctx.goals || "—")}</p>
-      <h4>Learning support</h4>
-      <p>${escapeHtml(ctx.supports || ctx.learningStyle || "—")}</p>
+      <h4>Survey goal</h4>
+      <p>${escapeHtml(goal.surfaceFrame)}</p>
+      ${pairsHtml || "<p>No completed question pairs yet.</p>"}
+      <h4>Closing note</h4>
+      <p>${escapeHtml(session.closingAnswer || "—")}</p>
     `;
   }
 
@@ -649,12 +392,18 @@
   function buildExport() {
     return {
       project: "LDMLFN Microtraining",
-      purpose: "Relational capture of Microsoft product experience for microtraining design",
+      surveyGoal: {
+        id: goal.id,
+        application: goal.application,
+        surfaceFrame: goal.surfaceFrame,
+        deepLenses: goal.deepLenses,
+      },
       exportedAt: new Date().toISOString(),
       person: Profiles.getCurrentPublic(),
       sessionId: session.id,
       startedAt: session.startedAt,
-      context: session.context,
+      pairs: session.pairs,
+      closingAnswer: session.closingAnswer,
       transcript: session.turns,
     };
   }
@@ -667,24 +416,28 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ldmlfn-experience-${slug}-${session.id}.json`;
+    a.download = `ldmlfn-${goal.id}-${slug}-${session.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   async function copySummary() {
-    const ctx = session.context;
     const person = Profiles.getCurrentPublic();
     const lines = [
-      "LDMLFN Microtraining — Experience summary",
+      `LDMLFN Microtraining — ${goal.application} summary`,
       `Person: ${person?.name || "—"} <${person?.email || "—"}>`,
-      `Session: ${session.id}`,
       "",
-      `Relation: ${ctx.relation || "—"}`,
-      `Products: ${ctx.products.map(productDisplayName).join(", ") || "—"}`,
-      `Landscape: ${ctx.landscape || "—"}`,
-      `Goals: ${ctx.goals || "—"}`,
-      `Supports: ${ctx.supports || ctx.learningStyle || "—"}`,
+      ...session.pairs.map((pair, i) => {
+        const q = goal.questions.find((item) => item.id === pair.questionId);
+        return [
+          `Q${i + 1}: ${q?.surface || pair.questionId}`,
+          `A: ${pair.surfaceAnswer || "—"}`,
+          `Follow-up: ${pair.clarification?.prompt || "—"}`,
+          `Clarified: ${pair.clarifyAnswer || "—"}`,
+          "",
+        ].join("\n");
+      }),
+      `Closing: ${session.closingAnswer || "—"}`,
     ];
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
@@ -746,7 +499,6 @@
       showPanel("auth");
       return;
     }
-    session = createSession();
     startDialogue(false);
   });
 
@@ -757,10 +509,7 @@
     startDialogue(true);
   });
 
-  els.restart.addEventListener("click", () => {
-    resetDialogueOnly();
-  });
-
+  els.restart.addEventListener("click", resetDialogueOnly);
   els.again?.addEventListener("click", resetDialogueOnly);
 
   els.form.addEventListener("submit", (e) => {
@@ -769,7 +518,6 @@
   });
 
   els.skip.addEventListener("click", () => handleReply("", true));
-
   els.exportBtn.addEventListener("click", downloadExport);
   els.copyBtn.addEventListener("click", copySummary);
 
@@ -784,9 +532,7 @@
   if (params.has("fresh") || params.has("clear")) {
     if (requireProfile()) clearSaved();
   }
-  if (params.has("signout")) {
-    Profiles.signOut();
-  }
+  if (params.has("signout")) Profiles.signOut();
   if (params.has("fresh") || params.has("clear") || params.has("signout")) {
     if (window.history.replaceState) {
       window.history.replaceState({}, "", window.location.pathname);
@@ -809,5 +555,6 @@
     setSyncEndpoint: Profiles.setSyncEndpoint,
     exportSession: buildExport,
     listPeople: () => Profiles.listPeople(),
+    activeGoal: () => goal,
   };
 })();
