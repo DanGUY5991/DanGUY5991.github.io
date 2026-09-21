@@ -74,15 +74,16 @@ function loadContent() {
     // --- Projects ("Work") ---
     const projectsGrid = document.getElementById('projects-grid');
     if (projectsGrid && profileData.projects) {
-        const projIcons = ['fa-briefcase', 'fa-chalkboard-teacher', 'fa-file-alt'];
+        const projIcons = ['fa-comments', 'fa-briefcase', 'fa-chalkboard-teacher', 'fa-file-alt'];
         projectsGrid.innerHTML = profileData.projects.map((project, index) => `
             <div class="project-card">
                <div class="card-character-container">
-                    <i class="fas ${projIcons[index]} card-character-icon anim-pulse"></i>
+                    <i class="fas ${projIcons[index % projIcons.length]} card-character-icon anim-pulse"></i>
                 </div>
                 <span class="project-type">${project.type}</span>
-                <h4>${project.title}</h4>
+                <h4>${project.href ? `<a href="${project.href}">${project.title}</a>` : project.title}</h4>
                 <p>${project.desc}</p>
+                ${project.href ? `<a class="project-link" href="${project.href}">Open project <i class="fas fa-arrow-right"></i></a>` : ''}
             </div>
         `).join('');
     }

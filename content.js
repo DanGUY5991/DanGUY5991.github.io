@@ -65,6 +65,12 @@ const profileData = {
     ],
     projects: [
         {
+            title: "LDMLFN Microtraining",
+            type: "Product · Experience Capture",
+            desc: "A remote, AI-guided dialogue that captures lived experience with Microsoft products—relational and story-first, with adaptive clarifying questions for microtraining design.",
+            href: "ldmlfn/"
+        },
+        {
             title: "Case Example: Strategic Alignment",
             type: "Consulting",
             desc: "A mid-sized service organization was struggling to align its strategic goals with day-to-day work. I supported leadership in mapping decision pathways, identifying hidden tensions, and designing clearer policy language."
