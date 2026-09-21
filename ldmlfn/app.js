@@ -14,12 +14,20 @@
   const els = {
     auth: document.getElementById("panel-auth"),
     landing: document.getElementById("panel-landing"),
+    bio: document.getElementById("panel-bio"),
     dialogue: document.getElementById("panel-dialogue"),
     close: document.getElementById("panel-close"),
     authForm: document.getElementById("auth-form"),
     authEmail: document.getElementById("auth-email"),
     authName: document.getElementById("auth-name"),
     authStatus: document.getElementById("auth-status"),
+    bioForm: document.getElementById("bio-form"),
+    bioRole: document.getElementById("bio-role"),
+    bioRelationships: document.getElementById("bio-relationships"),
+    bioOrg: document.getElementById("bio-org"),
+    bioStatus: document.getElementById("bio-status"),
+    bioBack: document.getElementById("bio-back"),
+    bioSubmit: document.getElementById("bio-submit"),
     accessLinkUrl: document.getElementById("access-link-url"),
     copyAccessLink: document.getElementById("copy-access-link"),
     copyLinkStatus: document.getElementById("copy-link-status"),
@@ -27,6 +35,7 @@
     signout: document.getElementById("signout-btn"),
     begin: document.getElementById("begin-btn"),
     resume: document.getElementById("resume-btn"),
+    editBio: document.getElementById("edit-bio-btn"),
     restart: document.getElementById("restart-btn"),
     again: document.getElementById("again-btn"),
     thread: document.getElementById("thread"),
@@ -98,9 +107,28 @@
   function showPanel(name) {
     els.auth.hidden = name !== "auth";
     els.landing.hidden = name !== "landing";
+    if (els.bio) els.bio.hidden = name !== "bio";
     els.dialogue.hidden = name !== "dialogue";
     els.close.hidden = name !== "close";
     els.restart.hidden = !(name === "dialogue" || name === "close");
+  }
+
+  function personContext() {
+    return Profiles.getCurrentPublic();
+  }
+
+  function fillBioForm() {
+    const bio = Profiles.getBio();
+    if (!els.bioRole) return;
+    els.bioRole.value = bio?.role || "";
+    els.bioRelationships.value = bio?.relationships || "";
+    els.bioOrg.value = bio?.orgContext || "";
+    els.bioStatus.textContent = "";
+  }
+
+  function showBioThenStart() {
+    fillBioForm();
+    showPanel("bio");
   }
 
   function refreshUserChrome() {
@@ -295,11 +323,22 @@
       clarification: null,
       clarifyAnswer: "",
     };
-    addBubble("guide", q.surface);
+    addBubble("guide", frameSurfaceQuestion(q));
     els.hint.textContent = q.hint || "A straightforward answer is enough.";
     els.skip.hidden = true;
     setProgress();
     save();
+  }
+
+  function frameSurfaceQuestion(q) {
+    const person = personContext();
+    const role = person?.role;
+    const rel = person?.relationships;
+    if (!role) return q.surface;
+    const preface = rel
+      ? `From your role as ${role} (working with ${rel}):`
+      : `From your role as ${role}:`;
+    return `${preface}\n\n${q.surface}`;
   }
 
   async function askClarification(answer) {
@@ -317,7 +356,7 @@
       goal: goal(),
       question: q,
       answer,
-      person: Profiles.getCurrentPublic(),
+      person: personContext(),
     });
 
     thinking.remove();
@@ -350,7 +389,7 @@
 
     const crafted = await Clarify.craftSupplemental({
       goal: goal(),
-      person: Profiles.getCurrentPublic(),
+      person: personContext(),
       personThemes: collectedThemes(),
     });
 
@@ -408,10 +447,14 @@
     if (!resume) {
       els.thread.innerHTML = "";
       const person = Profiles.getCurrent();
+      const pub = personContext();
       session = createSession();
+      const roleLine = pub?.role
+        ? ` We’ll keep your role as ${pub.role}${pub.relationships ? `, in relationship with ${pub.relationships}` : ""} in view as we ask about ${goal().application}.`
+        : "";
       addBubble(
         "guide",
-        `Welcome, ${person.name}. ${goal().intro}`
+        `Welcome, ${person.name}. ${goal().intro}${roleLine}`
       );
       await wait(400);
       await askSurfaceQuestion();
@@ -514,6 +557,10 @@
       <h3>${escapeHtml(goal().application)} experience portrait</h3>
       <h4>Profile</h4>
       <p>${escapeHtml(person?.name || "—")} · ${escapeHtml(person?.email || "—")}</p>
+      <h4>Role &amp; relationships</h4>
+      <p>${escapeHtml(person?.role || "—")}</p>
+      <p>${escapeHtml(person?.relationships || "—")}</p>
+      ${person?.orgContext ? `<p>${escapeHtml(person.orgContext)}</p>` : ""}
       <h4>Survey goal</h4>
       <p>${escapeHtml(goal().surfaceFrame)}</p>
       ${pairsHtml || "<p>No completed question pairs yet.</p>"}
@@ -647,10 +694,37 @@
       showPanel("auth");
       return;
     }
-    // Starting a module clears any prior in-progress session for a clean section run.
     clearSaved();
+    if (!Profiles.hasBio()) {
+      showBioThenStart();
+      return;
+    }
     startDialogue(false);
   });
+
+  els.bioForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    els.bioStatus.textContent = "";
+    try {
+      Profiles.updateBio({
+        role: els.bioRole.value,
+        relationships: els.bioRelationships.value,
+        orgContext: els.bioOrg.value,
+      });
+      els.bioStatus.textContent = "Role saved — continuing into the module.";
+      startDialogue(false);
+    } catch (err) {
+      els.bioStatus.textContent = err.message || "Could not save bio.";
+    }
+  });
+
+  els.bioBack?.addEventListener("click", () => {
+    showPanel("landing");
+  });
+
+  // Allow editing bio from landing
+  els.editBio?.addEventListener("click", showBioThenStart);
+  window.LDMLFNEditBio = showBioThenStart;
 
   els.resume?.addEventListener("click", () => {
     const saved = load();

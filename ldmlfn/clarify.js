@@ -36,64 +36,76 @@
     return themes;
   }
 
-  function localFollowUp({ goal, question, answer }) {
+  function localFollowUp({ goal, question, answer, person }) {
     const app = goal.application;
     const bit = snippet(answer, 140);
     const themes = detectThemes(answer);
     const aim = question.clarifyAim || "understanding";
+    const role = person?.role;
+    const rel = person?.relationships;
 
     const opener = bit
       ? `I’m holding what you shared about ${app}: “${bit}.”`
       : `I’m listening to how ${app} shows up for you.`;
 
+    const roleBridge = role
+      ? ` As a ${role}${rel ? ` in relationship with ${rel}` : ""},`
+      : "";
+
     let probe;
     if (themes.includes("access") || themes.includes("trust")) {
       probe =
-        `What does that challenge reveal about trust and accountability in your setting — whose understanding of ${app} counts, and how are people cared for when access or information feels uncertain?`;
+        `What does that challenge reveal about trust and accountability in your setting —${roleBridge} whose understanding of ${app} counts, and how are people cared for when access or information feels uncertain?`;
     } else if (themes.includes("finding") || themes.includes("structure")) {
       probe =
-        `Can you say a little more about the culture of how knowledge is kept in ${app} — whose pathways people actually trust, and what that means for relationships when someone new needs to find their way?`;
+        `Can you say a little more about the culture of how knowledge is kept in ${app} —${roleBridge} whose pathways people actually trust, and what that means for relationships when someone new needs to find their way?`;
     } else if (themes.includes("people") || themes.includes("communication") || /who/i.test(question.id || "")) {
       probe =
-        `To understand that more clearly: how do relationships around ${app} shape who gets heard, who holds the knowledge, and who feels responsible when something goes missing or unclear?`;
+        `To understand that more clearly:${roleBridge} how do relationships around ${app} shape who gets heard, who holds the knowledge, and who feels responsible when something goes missing or unclear?`;
     } else if (themes.includes("knowing")) {
       probe =
-        `Where does understanding of ${app} usually live among your people — in documents, in a few individuals, or in shared practice — and how does that affect belonging or confidence for others?`;
+        `Where does understanding of ${app} usually live among your people — in documents, in a few individuals, or in shared practice — and how does that affect belonging or confidence for others${role ? ` in your work as ${role}` : ""}?`;
     } else if (themes.includes("flow") || themes.includes("versions")) {
       probe =
-        `How do handoffs and “which version is true” play out relationally with ${app}? Who is accountable to whom, and what cultural habits help or hinder that care?`;
+        `How do handoffs and “which version is true” play out relationally with ${app}?${roleBridge} who is accountable to whom, and what cultural habits help or hinder that care?`;
     } else if (aim === "challenge") {
       probe =
-        `Looking at that challenge with ${app}, what else should we understand about the relationships or workplace/community culture that make this hard — not only the button clicks?`;
+        `Looking at that challenge with ${app},${roleBridge} what else should we understand about the relationships or workplace/community culture that make this hard — not only the button clicks?`;
     } else {
       probe =
-        `To clarify your understanding of ${app}: how is this way of working connected to the people and culture around you, and what Indigenous or relational wisdom about sharing knowledge feels missing or honored in that situation?`;
+        `To clarify your understanding of ${app}:${roleBridge} how is this way of working connected to the people and culture around you, and what Indigenous or relational wisdom about sharing knowledge feels missing or honored in that situation?`;
     }
 
     return {
       reflection: opener,
-      prompt: probe,
-      hint: `Speak to people, culture, or how knowledge is cared for — as it relates to this ${app} moment.`,
+      prompt: probe.replace(/\s+/g, " ").replace(/\s,/g, ",").trim(),
+      hint: `Answer from your role${role ? ` as ${role}` : ""} — people, culture, and relationships around ${app}.`,
       themes,
       source: "local",
     };
   }
 
-  function localSupplemental({ goal, peerInsights, personThemes = [] }) {
+  function localSupplemental({ goal, peerInsights, personThemes = [], person = null }) {
     const app = goal.application;
     const peers = peerInsights || [];
     const lead = peers[0];
     const who = lead?.fromName ? `${lead.fromName}` : "another participant";
     const perception = lead?.quoteSnippet || lead?.paraphrase || "teamwork and coordination challenges";
+    const role = person?.role;
+    const rel = person?.relationships;
 
     const themeHint = personThemes.includes("people") || personThemes.includes("communication")
       ? "teamwork and how people work together"
       : "how this shows up in your own relationships and culture of work";
 
+    const roleAsk = role
+      ? `From your role as ${role}${rel ? ` (with ${rel})` : ""}, h`
+      : "H";
+
     return {
       reflection: `Others working with ${app} have shared perceptions we can learn beside — not to compare you, but to listen across experiences.`,
       prompt:
-        `${who} described something like this with ${app}: “${snippet(perception, 150)}.”\n\nHow does that perception sit beside your experience — does it echo, differ, or reveal another side of ${themeHint} in your setting?`,
+        `${who} described something like this with ${app}: “${snippet(perception, 150)}.”\n\n${roleAsk}ow does that perception sit beside your experience — does it echo, differ, or reveal another side of ${themeHint} in your setting?`,
       hint: "You can agree, disagree, or add what is missing from your side of the story.",
       themes: lead?.themes || [],
       source: "local-supplemental",
@@ -123,6 +135,7 @@
                 ]
               : [
                   "Craft ONE clarifying follow-up question based on the participant's initial answer.",
+                  "Use the participant bio (role, relationships, org context) to frame the follow-up in their role and relationships to others.",
                   "Optionally weave peer insight themes if provided, without quoting other people unless helpful.",
                   "Surface: challenges or understanding of the Microsoft application.",
                   "Depth: culture, relationships, Indigenous understanding of the situation.",
@@ -138,6 +151,11 @@
           question: payload.question || null,
           answer: payload.answer || null,
           person: payload.person || null,
+          bio: {
+            role: payload.person?.role || null,
+            relationships: payload.person?.relationships || null,
+            orgContext: payload.person?.orgContext || null,
+          },
           peerInsights: payload.peerInsights || [],
         }),
       });
@@ -201,6 +219,7 @@
       goal: payload.goal,
       peerInsights,
       personThemes,
+      person: payload.person,
     });
   }
 

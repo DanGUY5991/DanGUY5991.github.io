@@ -62,6 +62,8 @@
     if (session?.stage === "close") status = "complete";
     else if (session?.turns?.length) status = "in_progress";
 
+    const bio = profile.bio || null;
+
     return {
       email: profile.email,
       name: profile.name,
@@ -71,6 +73,10 @@
       status,
       stage: session?.stage || null,
       productCount: session?.context?.products?.length || 0,
+      role: bio?.role || null,
+      relationships: bio?.relationships || null,
+      orgContext: bio?.orgContext || null,
+      bioComplete: Boolean(bio?.role && bio?.relationships),
     };
   }
 
@@ -155,6 +161,7 @@
           createdAt: now,
           lastAccessAt: now,
           accessCount: 0,
+          bio: null,
           session: null,
         };
         store.profiles[normalized] = profile;
@@ -182,6 +189,42 @@
       store.currentEmail = null;
       writeStore(store);
       maybeSync("sign_out", { person: publicProfile(current) });
+    },
+
+    getBio() {
+      return this.getCurrent()?.bio || null;
+    },
+
+    hasBio() {
+      const bio = this.getBio();
+      return Boolean(bio?.role && String(bio.role).trim() && bio?.relationships && String(bio.relationships).trim());
+    },
+
+    /**
+     * Save role / relationship bio used to contextualize later questions.
+     */
+    updateBio({ role, relationships, orgContext }) {
+      const store = readStore();
+      const email = store.currentEmail;
+      if (!email || !store.profiles[email]) {
+        throw new Error("Sign in before saving your role.");
+      }
+      const cleanedRole = String(role || "").trim();
+      const cleanedRel = String(relationships || "").trim();
+      if (!cleanedRole) throw new Error("Please share your role or kind of work.");
+      if (!cleanedRel) throw new Error("Please share how you relate to others in that work.");
+
+      store.profiles[email].bio = {
+        role: cleanedRole,
+        relationships: cleanedRel,
+        orgContext: String(orgContext || "").trim(),
+        updatedAt: new Date().toISOString(),
+      };
+      store.profiles[email].lastAccessAt = new Date().toISOString();
+      logAccess(store, store.profiles[email], "bio_updated");
+      writeStore(store);
+      maybeSync("bio_updated", { person: publicProfile(store.profiles[email]) });
+      return store.profiles[email].bio;
     },
 
     /** Read session only for the signed-in profile. */

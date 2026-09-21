@@ -103,6 +103,7 @@
       <div class="cta-row">
         <button type="button" class="primary-btn" id="begin-btn">Begin this module</button>
         <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved survey</button>
+        <button type="button" class="ghost-btn" id="edit-bio-btn">Edit role bio</button>
         <a class="text-link" href="#how-it-works">How this works</a>
       </div>
       <aside class="how-card" id="how-it-works">
@@ -118,6 +119,42 @@
           Other profiles cannot open your survey.
         </p>
       </aside>
+    </section>
+
+    <!-- Bio / role context -->
+    <section class="panel panel--bio" id="panel-bio" hidden>
+      <p class="eyebrow">Before the module</p>
+      <h2>Your role and relationships</h2>
+      <p class="lede">
+        A few bio questions help the guide ask follow-ups in the context of your role
+        and how you relate to others — not as a generic skill check.
+      </p>
+      <form class="auth-card" id="bio-form" autocomplete="on">
+        <label class="field" for="bio-role">
+          <span>What role or kind of work do you hold?</span>
+          <input type="text" id="bio-role" name="role" required
+            placeholder="e.g. facilitator, coordinator, instructor, admin, learner…">
+        </label>
+        <label class="field" for="bio-relationships">
+          <span>Who do you mainly work with or support in that role?</span>
+          <textarea id="bio-relationships" name="relationships" rows="3" required
+            placeholder="e.g. community partners, instructors, leadership, students, peers…"></textarea>
+        </label>
+        <label class="field" for="bio-org">
+          <span>Optional — team, program, or community context</span>
+          <input type="text" id="bio-org" name="orgContext"
+            placeholder="e.g. learning team, nonprofit program, department…">
+        </label>
+        <p class="auth-status" id="bio-status" role="status"></p>
+        <div class="cta-row">
+          <button type="submit" class="primary-btn" id="bio-submit">Save and continue</button>
+          <button type="button" class="ghost-btn" id="bio-back">Back</button>
+        </div>
+        <p class="fine-print">
+          Role and relationships stay with your profile and shape how questions are framed.
+          Other people may see your role on the people list; they cannot open your answers.
+        </p>
+      </form>
     </section>
 
     <!-- Dialogue -->
