@@ -39,12 +39,12 @@
   <main class="shell">
     <!-- Access / login -->
     <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
-      <p class="eyebrow">SharePoint listening survey</p>
+      <p class="eyebrow">Microsoft product listening survey</p>
       <h1 id="auth-title">LDMLFN Microtraining</h1>
       <p class="lede">
         Sign in with your email to create a profile or continue where you left off.
-        This survey asks simple questions about SharePoint challenges and understanding —
-        then crafts one clarifying follow-up from each answer.
+        Choose a product module, answer simple questions about challenges and understanding,
+        then get one clarifying follow-up crafted from each answer.
       </p>
 
       <div class="access-link-card" id="access-link-card">
@@ -85,29 +85,33 @@
 
     <!-- Landing -->
     <section class="panel panel--landing" id="panel-landing" aria-labelledby="landing-title" hidden>
-      <p class="eyebrow">SharePoint · Microsoft application goal</p>
+      <p class="eyebrow" id="landing-eyebrow">Microsoft product modules</p>
       <h1 id="landing-title">Welcome back</h1>
       <p class="lede" id="landing-lede">
-        Simple questions about SharePoint challenges and understanding.
-        After each answer, one AI-crafted follow-up clarifies culture, relationships,
-        and how people make sense of the situation.
+        Pick a product section. Each module asks focused initial questions about that application,
+        then crafts one clarifying follow-up from your answer — listening for culture, relationships,
+        and Indigenous understanding of the situation.
       </p>
+
+      <div class="module-picker" id="module-picker" role="listbox" aria-label="Product modules"></div>
+
       <ul class="promise-list">
+        <li>Modular sections — each Microsoft product has its own key questions.</li>
         <li>Straightforward first — every question starts plain and short.</li>
         <li>One crafted follow-up — clarification is built from your answer.</li>
-        <li>Deeper listening — culture, relationships, and Indigenous understanding of the situation.</li>
       </ul>
       <div class="cta-row">
-        <button type="button" class="primary-btn" id="begin-btn">Begin the SharePoint survey</button>
+        <button type="button" class="primary-btn" id="begin-btn">Begin this module</button>
         <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved survey</button>
         <a class="text-link" href="#how-it-works">How this works</a>
       </div>
       <aside class="how-card" id="how-it-works">
         <h2>How this works</h2>
         <p>
-          You answer a simple SharePoint question. The guide then crafts a follow-up
-          from what you said — still about SharePoint challenges or understanding,
-          while listening for culture, relationships, and Indigenous understanding of the situation.
+          Choose a product module (SharePoint, Teams, Excel, and more). You answer a simple
+          question about challenges or understanding. The guide then crafts a follow-up from
+          what you said — still about that product, while listening for culture, relationships,
+          and Indigenous understanding of the situation.
         </p>
         <p class="fine-print">
           Your answers stay in your profile on this browser until you export them.
@@ -163,7 +167,13 @@
   </footer>
 
   <script src="profiles.js"></script>
-  <script src="survey-goals.js"></script>
+  <script src="modules/registry.js"></script>
+  <script src="modules/sharepoint.js"></script>
+  <script src="modules/teams.js"></script>
+  <script src="modules/excel.js"></script>
+  <script src="modules/outlook.js"></script>
+  <script src="modules/onedrive.js"></script>
+  <script src="modules/copilot.js"></script>
   <script src="clarify.js"></script>
   <script src="app.js"></script>
 </body>

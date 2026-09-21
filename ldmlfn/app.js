@@ -1,11 +1,12 @@
 /**
  * LDMLFN Microtraining — dialogue runner
- * Active survey goal (SharePoint first): simple surface question →
+ * Product modules (SharePoint, Teams, Excel, …): simple surface question →
  * answer → AI-crafted clarifying follow-up → next question.
  */
 
 (() => {
   const Profiles = window.LDMLFNProfiles;
+  const Modules = window.LDMLFNModules;
   const Goals = window.LDMLFNSurveyGoals;
   const Clarify = window.LDMLFNClarify;
   const AI_ENDPOINT_KEY = "ldmlfn-ai-endpoint";
@@ -43,19 +44,24 @@
     closeSummary: document.getElementById("close-summary"),
     landingTitle: document.getElementById("landing-title"),
     landingLede: document.getElementById("landing-lede"),
+    landingEyebrow: document.getElementById("landing-eyebrow"),
+    modulePicker: document.getElementById("module-picker"),
   };
 
-  const goal = Goals.getActiveGoal();
+  function goal() {
+    return Modules.getSelected() || Goals.getActiveGoal();
+  }
 
   let session = createSession();
   let busy = false;
 
   function createSession() {
+    const g = goal();
     return {
       id: `ldmlfn-${Date.now().toString(36)}`,
       startedAt: new Date().toISOString(),
-      goalId: goal.id,
-      application: goal.application,
+      goalId: g.id,
+      application: g.application,
       stage: "intro",
       /** @type {"surface"|"clarify"|"closing"} */
       phase: "surface",
@@ -108,6 +114,47 @@
     els.userChip.textContent = `${person.name} · ${person.email}`;
   }
 
+  function renderModulePicker() {
+    if (!els.modulePicker) return;
+    const selectedId = Modules.getSelectedId();
+    els.modulePicker.innerHTML = Modules.list()
+      .map((mod) => {
+        const selected = mod.id === selectedId;
+        const count = mod.questions?.length || 0;
+        return `
+          <button type="button" class="module-card${selected ? " is-selected" : ""}"
+            role="option" aria-selected="${selected}" data-module-id="${mod.id}">
+            <span class="module-card__name">${escapeHtml(mod.application)}</span>
+            <span class="module-card__blurb">${escapeHtml(mod.blurb || "")}</span>
+            <span class="module-card__meta">${count} key questions</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    els.modulePicker.querySelectorAll("[data-module-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        Modules.setSelected(btn.getAttribute("data-module-id"));
+        refreshLandingCopy();
+        renderModulePicker();
+      });
+    });
+  }
+
+  function refreshLandingCopy() {
+    const g = goal();
+    const person = Profiles.getCurrent();
+    if (els.landingEyebrow) {
+      els.landingEyebrow.textContent = `${g.application} · product module`;
+    }
+    if (person && els.landingLede) {
+      els.landingLede.textContent = `Selected module: ${g.application}. ${g.blurb || ""} Simple questions first; one clarifying follow-up after each answer.`;
+    }
+    if (els.begin) {
+      els.begin.textContent = `Begin ${g.application} module`;
+    }
+  }
+
   function enterAppShell(result) {
     refreshUserChrome();
     Profiles.adoptLegacySessionIfEmpty();
@@ -115,12 +162,17 @@
     const person = Profiles.getCurrent();
     const saved = load();
 
+    // If a saved session belongs to a module, keep that module selected for resume.
+    if (saved?.goalId && Modules.get(saved.goalId)) {
+      Modules.setSelected(saved.goalId);
+    }
+
     els.landingTitle.textContent = result?.isNew
       ? `Welcome, ${person.name}`
       : `Welcome back, ${person.name}`;
-    els.landingLede.textContent = result?.isNew
-      ? `Your profile is ready for the ${goal.application} listening survey — simple questions, with one clarifying follow-up after each answer.`
-      : `Continue your ${goal.application} survey or begin again. Your answers stay with your email only.`;
+
+    renderModulePicker();
+    refreshLandingCopy();
 
     if (saved && saved.stage === "close" && saved.turns?.length) {
       session = saved;
@@ -132,6 +184,7 @@
 
     if (saved && saved.stage !== "close" && saved.turns?.length) {
       els.resume.hidden = false;
+      els.resume.textContent = `Continue saved ${saved.application || "survey"}`;
       showPanel("landing");
       return;
     }
@@ -141,7 +194,7 @@
   }
 
   function setProgress() {
-    const total = goal.questions.length * 2 + 2; // surface+clarify pairs + intro/close weight
+    const total = goal().questions.length * 2 + 2; // surface+clarify pairs + intro/close weight
     let done = 0;
     if (session.stage === "intro") done = 0;
     else if (session.stage === "questions") {
@@ -155,7 +208,7 @@
     if (session.phase === "clarify") els.stage.textContent = "Clarifying";
     else if (session.stage === "closing") els.stage.textContent = "Closing";
     else if (session.stage === "close") els.stage.textContent = "Complete";
-    else els.stage.textContent = `${goal.application} · Question ${Math.min(session.questionIndex + 1, goal.questions.length)}`;
+    else els.stage.textContent = `${goal().application} · Question ${Math.min(session.questionIndex + 1, goal().questions.length)}`;
   }
 
   function addBubble(role, text, kind = "") {
@@ -195,7 +248,7 @@
   }
 
   function currentQuestion() {
-    return goal.questions[session.questionIndex] || null;
+    return goal().questions[session.questionIndex] || null;
   }
 
   async function askSurfaceQuestion() {
@@ -232,7 +285,7 @@
     els.thread.appendChild(thinking);
 
     const crafted = await Clarify.craftFollowUp({
-      goal,
+      goal: goal(),
       question: q,
       answer,
       person: Profiles.getCurrentPublic(),
@@ -259,7 +312,7 @@
     session.stage = "closing";
     session.phase = "surface";
     session.pendingQuestionId = "closing";
-    addBubble("guide", goal.closingPrompt);
+    addBubble("guide", goal().closingPrompt);
     els.hint.textContent = "Optional — share anything else that matters.";
     els.skip.hidden = false;
     setProgress();
@@ -282,7 +335,7 @@
       session = createSession();
       addBubble(
         "guide",
-        `Welcome, ${person.name}. ${goal.intro}`
+        `Welcome, ${person.name}. ${goal().intro}`
       );
       await wait(400);
       await askSurfaceQuestion();
@@ -325,7 +378,7 @@
           session.currentPair = null;
         }
         session.questionIndex += 1;
-        if (session.questionIndex >= goal.questions.length) {
+        if (session.questionIndex >= goal().questions.length) {
           await askClosing();
         } else {
           await askSurfaceQuestion();
@@ -347,14 +400,14 @@
     Profiles.markComplete();
     renderPortrait();
     showPanel("close");
-    els.closeSummary.textContent = `Your ${goal.application} listening map is ready — surface answers plus clarifying follow-ups about culture, relationships, and understanding.`;
+    els.closeSummary.textContent = `Your ${goal().application} listening map is ready — surface answers plus clarifying follow-ups about culture, relationships, and understanding.`;
   }
 
   function renderPortrait() {
     const person = Profiles.getCurrentPublic();
     const pairsHtml = session.pairs
       .map((pair) => {
-        const q = goal.questions.find((item) => item.id === pair.questionId);
+        const q = goal().questions.find((item) => item.id === pair.questionId);
         return `
           <h4>${escapeHtml(q?.surface || pair.questionId)}</h4>
           <p><strong>Answer:</strong> ${escapeHtml(truncate(pair.surfaceAnswer || "—", 280))}</p>
@@ -365,11 +418,11 @@
       .join("");
 
     els.portrait.innerHTML = `
-      <h3>${escapeHtml(goal.application)} experience portrait</h3>
+      <h3>${escapeHtml(goal().application)} experience portrait</h3>
       <h4>Profile</h4>
       <p>${escapeHtml(person?.name || "—")} · ${escapeHtml(person?.email || "—")}</p>
       <h4>Survey goal</h4>
-      <p>${escapeHtml(goal.surfaceFrame)}</p>
+      <p>${escapeHtml(goal().surfaceFrame)}</p>
       ${pairsHtml || "<p>No completed question pairs yet.</p>"}
       <h4>Closing note</h4>
       <p>${escapeHtml(session.closingAnswer || "—")}</p>
@@ -393,10 +446,10 @@
     return {
       project: "LDMLFN Microtraining",
       surveyGoal: {
-        id: goal.id,
-        application: goal.application,
-        surfaceFrame: goal.surfaceFrame,
-        deepLenses: goal.deepLenses,
+        id: goal().id,
+        application: goal().application,
+        surfaceFrame: goal().surfaceFrame,
+        deepLenses: goal().deepLenses,
       },
       exportedAt: new Date().toISOString(),
       person: Profiles.getCurrentPublic(),
@@ -416,7 +469,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ldmlfn-${goal.id}-${slug}-${session.id}.json`;
+    a.download = `ldmlfn-${goal().id}-${slug}-${session.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -424,11 +477,11 @@
   async function copySummary() {
     const person = Profiles.getCurrentPublic();
     const lines = [
-      `LDMLFN Microtraining — ${goal.application} summary`,
+      `LDMLFN Microtraining — ${goal().application} summary`,
       `Person: ${person?.name || "—"} <${person?.email || "—"}>`,
       "",
       ...session.pairs.map((pair, i) => {
-        const q = goal.questions.find((item) => item.id === pair.questionId);
+        const q = goal().questions.find((item) => item.id === pair.questionId);
         return [
           `Q${i + 1}: ${q?.surface || pair.questionId}`,
           `A: ${pair.surfaceAnswer || "—"}`,
@@ -499,12 +552,17 @@
       showPanel("auth");
       return;
     }
+    // Starting a module clears any prior in-progress session for a clean section run.
+    clearSaved();
     startDialogue(false);
   });
 
   els.resume?.addEventListener("click", () => {
     const saved = load();
     if (!saved) return;
+    if (saved.goalId && Modules.get(saved.goalId)) {
+      Modules.setSelected(saved.goalId);
+    }
     session = saved;
     startDialogue(true);
   });
@@ -555,6 +613,8 @@
     setSyncEndpoint: Profiles.setSyncEndpoint,
     exportSession: buildExport,
     listPeople: () => Profiles.listPeople(),
-    activeGoal: () => goal,
+    activeGoal: () => goal(),
+    listModules: () => Modules.list(),
+    setModule: (id) => Modules.setSelected(id),
   };
 })();
