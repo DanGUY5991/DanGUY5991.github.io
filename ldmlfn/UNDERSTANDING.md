@@ -1,196 +1,204 @@
 # LDMLFN Microtraining — Current understanding (for review)
 
-**Purpose of this document:** a plain-language snapshot of how I currently understand this project, so you can correct, confirm, or redirect it.
+**Status:** Revised after stakeholder feedback (2026-09-21).  
+**Scope of this file:** Understanding of the **listening and training-needs tool** — one component within the broader **LDMLFN training development** project.  
+**Related:** [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) · [`README.md`](./README.md)
 
-**Date:** 2026-09-21  
-**Related living guidance:** [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) (structure decisions) · [`README.md`](./README.md) (how to run)
-
-Please mark anything that is wrong, incomplete, or over-assumed.
-
----
-
-## 1. What this project is
-
-**LDMLFN Microtraining** is a remote, browser-based listening survey.
-
-It is meant to help design microtraining by capturing how real people experience Microsoft applications — not by scoring their skills.
-
-### What it feels like on the surface
-A straightforward survey about:
-- challenges of using a Microsoft product
-- what people understand that product is for
-
-### What it is trying to capture underneath
-- culture around knowledge and work
-- relationships between people
-- Indigenous-informed understanding of the situation (relational care, accountability, who is affected) — without appropriating ceremony
-
-**Working assumption:** the “surface” keeps the tool approachable; the “depth” is where training design insight actually lives.
+Please continue to correct anything that is still wrong or over-assumed.
 
 ---
 
-## 2. Who it is for
+## 0. Place in the broader project
 
-| Audience | What they do |
+**LDMLFN training development** is larger than this tool. It can include facilitated conversations, hands-on activities, videos, coaching, and learning that never involves a survey.
+
+This document describes only a proposed **listening and training-needs tool**: a remote way to hear what people already do with Microsoft applications, what helps or gets in the way, and how working with others shapes that experience — so practical training can be shaped from real work.
+
+Completing this tool is optional relative to the wider training project.
+
+---
+
+## 1. Clear purpose (no hidden layer)
+
+**Purpose participants should understand:**
+
+> We want to understand what you already do, what helps or gets in the way, and how working with others affects your experience. Your responses will help shape practical training.
+
+Questions may concern **both**:
+- the software itself, and  
+- the work relationships surrounding it  
+
+when those relationships matter to the person answering.
+
+**What this is not**
+- Not a skill score or assessment of the person  
+- Not a hidden cultural analysis underneath a software quiz  
+- Not software claiming an Indigenous interpretation of someone’s experience  
+
+The tool should invite people to explain what matters to them. Ordinary software difficulties should not be reframed as cultural characteristics unless the participant themselves connects those dots.
+
+---
+
+## 2. Recommended next step: small SharePoint pilot
+
+Until the basic experience has been reviewed, development should focus on a **SharePoint pilot** with:
+
+| Include now | Hold as later extensions |
 | --- | --- |
-| Participants | Open an access link, sign in with email, share role/bio, complete a product module |
-| Facilitators / LDMLFN | See who accessed (visible roster), review exports / insights, design microtraining from what was heard |
+| Clear purpose (above) | Other product modules (Teams, Excel, Outlook, OneDrive, Copilot) |
+| Strengths-first questions | Cross-person / peer-coordinated questions |
+| Optional, correctable follow-ups | Dense multi-module curriculum map |
+| Participant-approved draft summary | Auto-submit to external collectors |
+| Defined information-sharing arrangement | Visible attendance roster (unless pilot explicitly needs it) |
 
-**Working assumptions about privacy / visibility**
-- People are **tracked and not hidden** (name, email, role can appear on a people list).
-- Participants **must not open each other’s full answer transcripts**.
-- Short perceptions from answers *can* be reused by AI to coordinate questions across people.
-
----
-
-## 3. End-to-end participant journey (as built)
-
-```
-Access link (/ldmlfn/)
-  → Simple email sign-in (create or continue profile)
-  → Pick a Microsoft product module
-  → Bio: role + who you work with/support (+ optional org context)
-  → Module questions:
-        simple question (framed by role)
-          → answer
-          → AI clarifying follow-up (from that answer + role/relationship context)
-          → clarification answer
-          → next simple question
-  → Optional supplemental question coordinated from other people’s perceptions
-  → Closing note
-  → Experience portrait + export
-```
+Other modules and cross-person features remain **proposed extensions**, not pilot requirements.
 
 ---
 
-## 4. Product modules
+## 3. Question stance: strengths and useful work first
 
-Each Microsoft application is its own **modular section** with focused key initial questions:
+Emphasize empowerment, participant choice, and learning toward a shared practical goal — not only friction.
 
-| Module | Focus of key questions (my read) |
+Example question directions for the SharePoint pilot:
+
+1. What already works well for you with SharePoint (or related file-sharing)?  
+2. What is something you would like to accomplish more easily?  
+3. When you need help, what kind of support works for you?  
+4. What gets in the way, when it does?  
+5. How does working with others affect your experience (when relevant to you)?  
+
+Challenges still matter; they should not be the only door into the conversation.
+
+---
+
+## 4. Follow-ups: optional and correctable
+
+An automatic AI question after every answer can feel repetitive or intrusive. Sometimes the answer is already enough.
+
+**Pilot expectation**
+- Follow-ups are **optional**  
+- Participant controls: **Skip**, **Continue**, and **Correct what was understood**  
+- The system may draft a reflective check (“Here’s what I understood…”) that the person can accept, edit, or reject  
+
+**Output**
+- Describe the result as a **draft summary of their answers** (an “experience portrait” only as a working title)  
+- Not an assessment of the person  
+- Participants should be able to **review and edit** the draft before sharing it  
+
+---
+
+## 5. Cross-person questions — unresolved; off for pilot
+
+Using other people’s answers (even short snippets) to shape later questions can:
+- identify someone through role, circumstances, or wording  
+- influence later answers  
+
+**For the initial SharePoint pilot: leave this feature off.**
+
+If developed later, the design must specify before use:
+- participant permission  
+- who reviews themes  
+- what information may be reused  
+- preference for asking about a **broad theme neutrally**, rather than suggesting that a colleague has reported a problem  
+
+Until then, treat cross-person coordination as a separate design choice — not core product behavior.
+
+---
+
+## 6. Identity, privacy, and information sharing (must resolve before participant use)
+
+### Important distinctions
+- **Entering an email is identification, not proof of identity.**  
+- “Same email = continue profile” is convenience, not secure access.  
+- Separate browser records do **not**, by themselves, demonstrate confidentiality.
+
+### Questions the pilot must answer in plain language
+
+| Question | Pilot answer to define before launch |
 | --- | --- |
-| SharePoint | What it is for, finding, trust, who is involved |
-| Teams | Collaboration, channels, meetings, who you reach |
-| Excel | Spreadsheet work, versions, who depends on numbers |
-| Outlook | Mail/calendar load, urgency, correspondence |
-| OneDrive | Files, sharing choices, who needs access |
-| Copilot | Understanding, use/hesitation, trust, who is adopting |
+| Who sees attendance? | _TBD with LDMLFN — propose: facilitators only, or no roster in pilot_ |
+| Who sees full answers? | _TBD — propose: participant + designated facilitators only_ |
+| Who sees draft summaries / exports? | _TBD — propose: participant first; shared only after they approve_ |
+| Why collect name / email / visits / last access? | _TBD — collect only what the pilot actually needs_ |
+| Where is information stored? | Currently browser `localStorage` on the device used; optional sync not required for pilot |
+| Does any information leave the device? | Not by default in the current static setup; any sync/export path must be stated |
+| How can participants correct information? | Draft summary editable before share (required for pilot) |
+| How can participants delete information? | _TBD — need an explicit clear/delete path_ |
 
-**Working assumption:** SharePoint was the first fully realized goal; the others follow the same pattern and are selectable now.
-
-**Rule I am following:** add a new Microsoft product by adding a module file — do not rewrite the whole app for each product.
-
----
-
-## 5. AI’s job in this project
-
-AI is not the survey itself. AI’s job is to **craft follow-ups**.
-
-### A) Clarifying follow-up (per answer)
-After each simple answer:
-- reflect briefly what was heard
-- ask one clarifying question shaped by:
-  - that answer
-  - the product module
-  - the person’s role and relationships
-  - lenses: culture / relationships / Indigenous understanding of the situation
-
-### B) Cross-user supplemental (after the module’s key questions)
-If other people have shared perceptions in the same module:
-- AI coordinates one supplemental question
-- Example intent: one person’s teamwork issues in Teams can become a prompt that asks another person how that perception sits beside *their* experience
-
-**Working assumption:** full transcripts stay private to each profile; only short insight snippets are used for coordination.
-
-### Local vs remote AI
-- Local clarifier works without a backend (GitHub Pages–friendly).
-- Optional remote AI endpoint can replace/enhance crafting when configured.
+**Working proposal for pilot (subject to your approval)**
+1. Minimal identity needed to return to one’s own draft (e.g. email or local session) — without claiming “secure login.”  
+2. No visible multi-person roster in the participant UI for the first pilot.  
+3. Participant reviews/edits draft summary before any sharing.  
+4. Facilitator access to shared results only after participant approval (or an agreed alternate consent process).  
+5. Written notice on the access page stating storage location and sharing rules.
 
 ---
 
-## 6. Identity, bio, and tracking
+## 7. Indigenous-informed approach (concrete and locally reviewable)
 
-### Identity
-- Email is the profile key (no password in v1).
-- Same email = continue the same profile.
-- Different email = different isolated dialogue session.
+Avoid language like “AI clarifies culture.” That gives the system too much interpretive authority.
 
-### Bio (required before first module run)
-- Role / kind of work
-- Who they mainly work with or support
-- Optional team/program/community context
+**Better role for the tool**
+- Ask **respectful questions about relationships and responsibilities when participants themselves make those relevant**  
+- Support participant control, careful listening, and reciprocity  
+- Leave interpretation to people and to **local review** — not to the software  
 
-This bio is used to **contextualize later questions**, e.g. framing SharePoint questions for a facilitator who supports instructors differently than for an admin.
-
-### People roster
-Visible list of who signed in: name, email, role, status, visits, last access.  
-Not a place to open someone else’s answers.
+The document and product should not imply that software can determine an Indigenous interpretation of someone’s experience. Local reviewers should be able to inspect wording, consent, and process.
 
 ---
 
-## 7. How the codebase is organized (my mental model)
+## 8. Role / bio context (kept, with care)
 
-```
-ldmlfn/
-  index.html          access + landing + bio + dialogue UI
-  people.html         facilitator roster / access log
-  profiles.js         identity, bio, per-email session isolation
-  insights.js         shared short perceptions for cross-user AI
-  modules/            one file per Microsoft product + registry
-  clarify.js          craft clarify + supplemental questions
-  app.js              runs the journey / UI shell
-  PROJECT-GUIDANCE.md structure-critical product decisions
-  UNDERSTANDING.md    this review document
-```
+Asking about role and who someone works with can still help frame questions in that person’s real work — e.g. facilitator supporting instructors vs. admin managing sites.
 
-**Separation I believe matters**
-1. Identity ≠ dialogue content  
-2. Product question banks ≠ AI clarification policy  
-3. Insight pool ≠ full transcript access  
+**Pilot care**
+- Make purpose of bio questions explicit  
+- Do not over-collect  
+- Use bio to ask better questions, not to categorize people culturally  
 
 ---
 
-## 8. What I believe success looks like
+## 9. What earlier “as built” work represented
 
-A useful LDMLFN output is not “User scored 3/5 on SharePoint.”  
-It is an experience map that shows, for a person in a role:
+Earlier drafts and code explored:
+- modular Microsoft product sections  
+- email-based profiles and a people roster  
+- AI follow-ups after each answer  
+- cross-user insight pooling for supplemental questions  
+- “surface vs underneath” framing  
 
-- how they understand the tool
-- where friction lives
-- how culture and relationships shape that friction
-- how their story sits beside others’ perceptions
-- what microtraining should honor next
-
----
-
-## 9. Open / unfinished items (please confirm priorities)
-
-These are present as ideas or light hooks, not fully finished product:
-
-1. **Multi-device facilitator sync** — optional sync endpoint exists conceptually; default is still browser `localStorage`.
-2. **Multi-module progress per person** — can run modules one at a time; no strong “completed SharePoint → next Teams” curriculum map yet.
-3. **Facilitator access code** for the people page — discussed as open, not built.
-4. **Auto-submit** of completed maps to a collector — open.
-5. **Stronger remote AI** wiring — local crafting works; production model endpoint not required yet.
-6. **Indigenous-informed practice** — encoded as dialogue posture/lenses; should stay carefully non-appropriative and may need your cultural review.
+Those explorations are useful prototypes. They are **not** the approved pilot definition. Implementation should be brought into line with this revised understanding before participant use.
 
 ---
 
-## 10. Please correct me
+## 10. Success for the SharePoint pilot
 
-Use this checklist (or rewrite freely):
+Success looks like:
+- participants understand why they are being asked  
+- they can speak to what already works, what they want to do more easily, and what support helps  
+- follow-ups feel optional and respectful, not relentless  
+- they recognize and can edit their draft summary  
+- information-sharing rules are clear and followed  
+- LDMLFN can use approved summaries to shape practical SharePoint training  
 
-- [ ] The purpose / surface-vs-depth split is right  
-- [ ] The participant journey matches what you want  
-- [ ] Module list and “key questions per product” approach is right  
-- [ ] Cross-user supplemental use of others’ perceptions is wanted as described  
-- [ ] Bio/role contextualization is wanted as described  
-- [ ] Visible people + private answers is the right privacy posture  
-- [ ] Anything in §9 that should move up as next build priority: _______________  
-- [ ] Anything I misunderstood: _______________  
+It does **not** look like scored expertise or a cultural diagnosis produced by software.
 
 ---
 
-## 11. One-sentence summary
+## 11. Correction checklist
 
-**LDMLFN Microtraining is a role-aware, module-based Microsoft listening survey that asks simple challenge/understanding questions, then uses AI to clarify culture and relationships — including coordinating supplemental questions from other people’s perceptions — so microtraining can be designed from lived experience rather than skill scores.**
+- [ ] Broader project vs. listening-tool distinction is clear  
+- [ ] Purpose wording is acceptable for participants  
+- [ ] Strengths-first question stance is right  
+- [ ] Optional Skip / Continue / Correct + editable draft summary is right  
+- [ ] Cross-person feature stays off for pilot  
+- [ ] Privacy table in §6 — fill or rewrite before launch  
+- [ ] Indigenous-informed stance in §7 is acceptable for local review  
+- [ ] SharePoint-only pilot scope is the right next build focus  
+- [ ] Anything still misunderstood: _______________  
+
+---
+
+## 12. One-sentence summary (revised)
+
+**This listening and training-needs tool is one part of LDMLFN training development: a SharePoint-first way for people to describe what already works, what they want to do more easily, and how working with others affects their experience — with optional follow-ups, participant-approved draft summaries, and clear information-sharing rules — so practical training can be shaped from lived work rather than from scores or hidden interpretation.**

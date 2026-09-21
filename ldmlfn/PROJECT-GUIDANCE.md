@@ -1,137 +1,124 @@
-# LDMLFN Microtraining — Project ideas & functions
+# LDMLFN listening tool — Project ideas & functions
 
-**Role of this file:** high-level product guidance that can change code structure.
-Update this before large refactors. Prefer amending ideas here over inventing new modules ad hoc.
+**Role of this file:** high-level guidance that can change code structure.  
+**Aligned with:** [`UNDERSTANDING.md`](./UNDERSTANDING.md) (stakeholder-revised understanding).
 
----
-
-## 1. Purpose
-
-Capture **lived experience with Microsoft applications** through a remote survey dialogue so LDMLFN can design microtraining that meets people where they already stand.
-
-**Surface feel:** challenges of using the target app, and what people understand about it.
-
-**Deeper capture:** culture, relationships, and Indigenous understanding of the situations around that tool.
+Update this before large refactors. Prefer amending ideas here over inventing features ad hoc.
 
 ---
 
-## 2. Product modules (structure-critical)
+## 1. Place in the broader project
 
-Each Microsoft product is a **modular section** with its own **key initial questions**.
+**LDMLFN training development** includes facilitation, hands-on practice, video, coaching, and other learning paths.
 
-| Module ID | Application | File | Status |
-| --- | --- | --- | --- |
-| `sharepoint` | SharePoint | `modules/sharepoint.js` | available (default) |
-| `teams` | Microsoft Teams | `modules/teams.js` | available |
-| `excel` | Excel | `modules/excel.js` | available |
-| `outlook` | Outlook | `modules/outlook.js` | available |
-| `onedrive` | OneDrive | `modules/onedrive.js` | available |
-| `copilot` | Microsoft Copilot | `modules/copilot.js` | available |
-
-### Pattern inside every module
-
-```
-simple surface question  (module-specific)
-  → participant answer
-  → AI-crafted clarifying follow-up (from that answer)
-  → participant clarification
-  → next simple question
-```
-
-**Rule:** add a new Microsoft product by registering a new file under `modules/` — do not fork `app.js`.
+This codebase is only the **listening and training-needs tool** — optional relative to the wider project.
 
 ---
 
-## 3. Core product ideas
+## 2. Purpose (transparent)
+
+Participant-facing purpose:
+
+> We want to understand what you already do, what helps or gets in the way, and how working with others affects your experience. Your responses will help shape practical training.
+
+Questions may address software **and** work relationships when participants make relationships relevant.  
+There is **no hidden cultural layer** beneath a software quiz.
+
+---
+
+## 3. Pilot scope (structure-critical)
+
+| In pilot now | Proposed extension later |
+| --- | --- |
+| SharePoint module only (as default focus) | Teams, Excel, Outlook, OneDrive, Copilot modules |
+| Strengths-first + friction + support questions | Cross-person coordinated questions |
+| Optional AI follow-ups (Skip / Continue / Correct) | Always-on follow-up after every answer |
+| Editable draft summary before share | Auto-submit without review |
+| Explicit info-sharing notice | Visible multi-person attendance roster |
+
+**Rule:** do not turn on cross-person insight coordination for participant use until permission, review, and reuse rules are designed and approved.
+
+---
+
+## 4. Core product ideas
 
 | ID | Idea | Status | Structural implication |
 | --- | --- | --- | --- |
-| I1 | Access before dialogue | decided | Auth gate before survey |
-| I2 | Email is identity | decided | `profiles.js` separate from dialogue |
-| I3 | Visible people, private answers | decided | Roster never loads another session body |
-| I4 | Story before scores | decided | Open text, not ratings |
-| I5 | Simple Q + AI clarification pair | decided | Pair-based runner in `app.js` |
-| I6 | Indigenous-informed clarification lens | decided | Policy in `clarify.js` |
-| I7 | Exportable experience maps | decided | Export = person + own session |
-| I8 | Optional remote AI for follow-ups | decided | Local clarifier always works |
-| I9 | Optional sync endpoint | leaning | Side-effect from profile events |
-| I12 | Modular product sections with key initial questions | decided | One registerable module per Microsoft app |
-| I13 | Surface = challenges/understanding; depth = culture/relationships/Indigenous understanding | decided | Clarifier always receives deep lenses |
-| I14 | Cross-user supplemental questions from others’ answers | decided | Shared insight pool (`insights.js`); AI coordinates supplemental without opening full profiles |
-| I15 | Bio/role questions that contextualize later prompts | decided | Bio panel before module; role + relationships frame surface Qs and AI clarify/supplemental |
-
-### Idea inbox
-
-- Multi-module progress per profile (complete SharePoint, then Teams)
-- —
+| I1 | Listening tool is one component of LDMLFN training | decided | Keep docs/UI from claiming to be the whole training program |
+| I2 | Transparent purpose (software + relationships when relevant) | decided | No “surface vs secret underneath” framing in copy or prompts |
+| I3 | Strengths and useful work first | decided | Question banks lead with what works / goals / support |
+| I4 | Optional, correctable follow-ups | decided | Follow-up UI: Skip, Continue, Correct understanding |
+| I5 | Draft summary, not assessment | decided | Editable portrait/summary before any share |
+| I6 | SharePoint pilot first | decided | Other modules remain registered but not pilot-required |
+| I7 | Cross-person questions off for pilot | decided | `insights` supplemental path disabled by default |
+| I8 | Email is identification, not proof of identity | decided | Copy must not claim secure login |
+| I9 | Privacy rules explicit before participant use | decided | Access page states who sees what, storage, correct/delete |
+| I10 | Indigenous-informed = respectful questions + local review | decided | Tool asks; does not interpret culture for the person |
+| I11 | Bio/role can contextualize questions carefully | decided | Explicit purpose; do not over-collect |
+| I12 | Optional remote AI endpoint | leaning | Local drafting must work without remote |
+| I13 | Facilitator sync / multi-device store | open | Only after sharing rules are clear |
 
 ---
 
-## 4. Primary functions
+## 5. Primary functions (pilot)
 
 | ID | Function | Owns | Must not |
 | --- | --- | --- | --- |
-| F1 | Access link | `index.html` | Bundle with dialogue |
-| F2–F6 | Sign-in, isolation, roster, access log | `profiles.js` / `people.*` | Cross-profile transcripts |
-| F2b | Bio (role, relationships, org context) | `profiles.js` + bio panel | Be optional forever — required before first module run |
-| F7 | Product module registry | `modules/registry.js` | Own UI chrome |
-| F8 | Module question banks | `modules/*.js` | Clarifier policy |
-| F9 | Clarifying follow-up craft | `clarify.js` | Hard-code per HTML page |
-| F9b | Cross-user supplemental craft | `clarify.js` + `insights.js` | Expose another user’s full transcript in the UI |
-| F10 | Dialogue runner + module picker | `app.js` | Own identity storage |
-| F11–F12 | Exports + optional sync | `app.js` / `profiles.js` | Leak other profiles |
+| F1 | Access + purpose notice | `index.html` | Hide sharing rules |
+| F2 | Lightweight return-to-draft identity | `profiles.js` | Claim secure authentication |
+| F3 | Bio (role, relationships) with clear purpose | bio panel | Cultural categorization |
+| F4 | SharePoint question bank (strengths-first) | `modules/sharepoint.js` | Challenge-only framing |
+| F5 | Optional follow-up draft + Correct/Skip/Continue | `clarify.js` + `app.js` | Force a follow-up every time |
+| F6 | Editable draft summary | close panel | Present as assessment |
+| F7 | Export / share only after participant approval | `app.js` | Silent upload |
+| F8 | Clear / delete own draft | `profiles.js` | Leave no participant delete path |
+| F9 | Product module registry (extensions) | `modules/*` | Require all modules in pilot |
+| F10 | Cross-person insights (extension, off) | `insights.js` | Enable without consent design |
 
 ---
 
-## 5. Module boundaries
+## 6. Module boundaries
 
 ```
 ldmlfn/
-  profiles.js
-  insights.js          → shared perception pool for cross-user AI coordination
-  modules/
-    registry.js
-    sharepoint.js | teams.js | excel.js | outlook.js | onedrive.js | copilot.js
-  clarify.js           → per-answer clarify + peer-coordinated supplemental
-  app.js
-  people.js / people.html
-  PROJECT-GUIDANCE.md
+  UNDERSTANDING.md     → stakeholder understanding (source of truth for intent)
+  PROJECT-GUIDANCE.md  → this file (structure decisions)
+  profiles.js          → return-to-draft identity, bio, local session, delete
+  modules/             → question banks (SharePoint = pilot focus)
+  clarify.js           → optional follow-up drafting (no forced cultural diagnosis)
+  insights.js          → cross-person pool (disabled for pilot)
+  app.js               → journey: purpose → bio → questions → optional follow-ups → edit summary
+  people.*             → facilitator views only if pilot sharing rules require them
 ```
 
-**Rules**
+---
 
-1. Identity ≠ dialogue ≠ product content ≠ clarifier ≠ insight pool.
-2. New product = new `modules/<id>.js` that calls `LDMLFNModules.register(...)`.
-3. Every simple question gets one crafted clarifying follow-up before the next simple question.
-4. After a module’s key questions, AI may ask one **supplemental** question coordinated from other participants’ perceptions in that module (excluding the current user).
-5. Insights are short perceptions for coordination — not a backdoor into another profile’s full session.
-6. Clarifiers dig for culture / relationships / Indigenous understanding while staying framed as app challenge/understanding.
+## 7. Follow-up policy (pilot)
+
+1. After an answer, the tool **may** offer a drafted understanding check or one optional question.  
+2. Participant can **Skip**, **Continue**, or **Correct what was understood**.  
+3. If the answer is sufficient, no follow-up is required.  
+4. Follow-ups may ask about relationships/responsibilities **when the participant’s answer makes those relevant** — not by default reinterpretation.  
+5. Wording remains open to local review.
 
 ---
 
-## 6. Non-goals (for now)
-
-- Password / SSO
-- Hidden participant lists
-- Cross-profile browsing of answers
-- Graded skill assessment
-
----
-
-## 7. Decision log
+## 8. Decision log
 
 | Date | Decision | Why |
 | --- | --- | --- |
-| 2026-09-21 | Email-only login + visible roster | Track people without hiding; isolate answers |
-| 2026-09-21 | SharePoint-first listening pattern | Prove simple Q + AI clarify |
-| 2026-09-21 | Modular product sections | Focus key initial questions per Microsoft app without rewriting the runner |
-| 2026-09-21 | Cross-user insight pool + supplemental AI questions | One person’s teamwork/perception themes can inform another user’s coordinated follow-up without opening full profiles |
-| 2026-09-21 | Bio role + relationships before modules | Later questions and clarifiers are framed in the person’s role and relations to others |
+| 2026-09-21 | Treat this as a listening tool within broader LDMLFN training | Avoid collapsing the whole project into a survey |
+| 2026-09-21 | Drop hidden surface/underneath framing | Participants deserve transparent purpose |
+| 2026-09-21 | Strengths-first SharePoint pilot | Align with empowerment and practical goals |
+| 2026-09-21 | Optional correctable follow-ups + editable draft summary | Reduce intrusion; participant control |
+| 2026-09-21 | Cross-person features off for pilot | Re-identification and influence risks |
+| 2026-09-21 | Privacy/identity claims must be honest | Email ≠ secure identity; storage/sharing must be explicit |
 
 ---
 
-## 8. How to use this file when coding
+## 9. How to use this file when coding
 
-1. New Microsoft product? Add `modules/<id>.js` + a row in §2.
-2. Changing clarification depth? Edit `clarify.js`, not every module file.
-3. Cross-module features (bio role, cross-user AI) stay `leaning` until designed here first.
+1. If a change conflicts with [`UNDERSTANDING.md`](./UNDERSTANDING.md), update understanding (with stakeholder review) before coding.  
+2. Prefer SharePoint pilot quality over enabling every module.  
+3. Do not re-enable cross-person supplemental without an approved consent design.  
+4. Prefer participant control (skip/correct/edit/delete) over denser automation.
