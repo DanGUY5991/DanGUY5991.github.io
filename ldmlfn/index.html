@@ -1,236 +1,206 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LDMLFN Microtraining | Microsoft Experience Dialogue</title>
-  <meta name="description"
-    content="LDMLFN Microtraining — a relational, AI-guided dialogue that captures lived experience with Microsoft products.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome · LDMLFN training</title>
+  <meta name="description" content="Help shape SharePoint learning that works for you. A listening survey within LDMLFN training development.">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #253e37;
+      background: #f5f3ed;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      max-width: 1050px;
+      margin: auto;
+      padding: 28px 30px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+    }
+    .brand { font-weight: 650; font-size: 15px; }
+    .draft {
+      font-size: 12px;
+      border: 1px solid #b9c6bc;
+      border-radius: 30px;
+      padding: 6px 11px;
+      white-space: nowrap;
+    }
+    main {
+      max-width: 760px;
+      margin: 35px auto 65px;
+      padding: 0 25px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: #526c60;
+    }
+    h1 {
+      font-family: Georgia, serif;
+      font-weight: 400;
+      font-size: clamp(38px, 7vw, 58px);
+      line-height: 1.12;
+      margin: 18px 0 24px;
+      letter-spacing: -1px;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.65;
+      color: #4d5f57;
+    }
+    .intro { max-width: 630px; }
+    .card {
+      background: #fffefa;
+      border: 1px solid #dddcd2;
+      border-radius: 18px;
+      padding: 28px 32px;
+      margin: 30px 0;
+    }
+    h2 { font-size: 19px; margin: 0 0 17px; }
+    ul { padding-left: 22px; margin: 0; }
+    li {
+      padding-left: 6px;
+      line-height: 1.65;
+      margin: 11px 0;
+      color: #4d5f57;
+    }
+    .choice { font-size: 16px; margin-bottom: 0; }
+    a.button,
+    button {
+      font: inherit;
+      background: #254f40;
+      color: white;
+      border: 0;
+      border-radius: 9px;
+      padding: 15px 24px;
+      cursor: pointer;
+      font-weight: 600;
+      min-height: 48px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    a.button:hover,
+    button:hover { background: #173d2f; }
+    a.button:focus-visible,
+    button:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid #ae6a24;
+      outline-offset: 5px;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+    .actions span { font-size: 14px; color: #59685f; }
+    details {
+      border-top: 1px solid #d5d9d0;
+      margin-top: 34px;
+      padding-top: 22px;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    details p { font-size: 15px; }
+    details ul {
+      font-size: 15px;
+      color: #4d5f57;
+      margin: 0 0 1rem;
+    }
+    .note {
+      font-size: 12px;
+      line-height: 1.6;
+      color: #59685f;
+      margin-top: 30px;
+    }
+    footer {
+      max-width: 1050px;
+      margin: auto;
+      border-top: 1px solid #d5d9d0;
+      padding: 20px 30px;
+      font-size: 12px;
+      color: #59685f;
+    }
+    @media (max-width: 520px) {
+      header { padding: 20px; }
+      .brand { max-width: 180px; }
+      main { margin-top: 24px; padding: 0 20px; }
+      .card { padding: 23px; }
+      p { font-size: 17px; }
+      .actions { gap: 12px; }
+    }
+  </style>
 </head>
-
 <body>
-  <div class="atmosphere" aria-hidden="true">
-    <div class="atmosphere__glow atmosphere__glow--a"></div>
-    <div class="atmosphere__glow atmosphere__glow--b"></div>
-    <div class="atmosphere__texture"></div>
-  </div>
-
-  <header class="topbar">
-    <a class="topbar__home" href="../index.html">DP.</a>
-    <div class="topbar__brand">
-      <span class="topbar__mark">LDMLFN</span>
-      <span class="topbar__sub">Microtraining</span>
-    </div>
-    <div class="topbar__actions">
-      <a class="text-link topbar__people" href="people.html" title="Facilitator access">Facilitator</a>
-      <span class="topbar__user" id="user-chip" hidden></span>
-      <button type="button" class="ghost-btn" id="signout-btn" hidden>Sign out</button>
-      <button type="button" class="ghost-btn" id="restart-btn" hidden>Start over</button>
-    </div>
+  <header>
+    <div class="brand">LDMLFN · Training development</div>
+    <span class="draft">Design preview</span>
   </header>
 
-  <main class="shell">
-    <!-- Access / login -->
-    <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
-      <p class="eyebrow">Listening &amp; training-needs tool</p>
-      <h1 id="auth-title">LDMLFN Microtraining</h1>
-      <p class="lede">
-        Create an account with your email and a password, or sign in to continue your own draft.
-        Your answers stay with your account — other people cannot open them with their login.
-      </p>
+  <main>
+    <div class="eyebrow">SHAREPOINT · YOUR EXPERIENCE</div>
+    <h1>Help shape learning<br>that works for you.</h1>
 
-      <div class="access-link-card" id="access-link-card">
-        <p class="access-link-card__label">Share this access link</p>
-        <div class="access-link-card__row">
-          <code id="access-link-url"></code>
-          <button type="button" class="ghost-btn" id="copy-access-link">Copy link</button>
-        </div>
-        <p class="fine-print" id="copy-link-status" role="status"></p>
-      </div>
+    <p class="intro">
+      Tell us about using SharePoint in your work: what already works well,
+      what gets in the way, and what you would like to do more easily.
+    </p>
+    <p class="intro">
+      Your experience can help shape practical training for the work you do
+      and the people you work with.
+    </p>
 
-      <div class="auth-tabs" role="tablist">
-        <button type="button" class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true">Sign in</button>
-        <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false">Create account</button>
-      </div>
-
-      <form class="auth-card" id="auth-form" autocomplete="on">
-        <h2 class="auth-card__title" id="auth-card-title">Sign in</h2>
-        <p class="auth-card__hint" id="auth-card-hint">Use your email and password to open your own answers only.</p>
-
-        <label class="field" for="auth-email">
-          <span>Email</span>
-          <input type="email" id="auth-email" name="email" required
-            placeholder="you@organization.org" autocomplete="username" inputmode="email" spellcheck="false">
-        </label>
-
-        <label class="field" for="auth-name" id="auth-name-field" hidden>
-          <span>Display name</span>
-          <input type="text" id="auth-name" name="displayName" placeholder="How should we greet you?" autocomplete="nickname">
-        </label>
-
-        <label class="field" for="auth-password">
-          <span>Password</span>
-          <input type="password" id="auth-password" name="password" required minlength="8"
-            placeholder="At least 8 characters" autocomplete="current-password">
-        </label>
-
-        <label class="field" for="auth-password-confirm" id="auth-confirm-field" hidden>
-          <span>Confirm password</span>
-          <input type="password" id="auth-password-confirm" name="passwordConfirm" minlength="8"
-            placeholder="Re-enter password" autocomplete="new-password">
-        </label>
-
-        <p class="auth-status" id="auth-status" role="status"></p>
-
-        <div class="cta-row">
-          <button type="submit" class="primary-btn" id="auth-submit">Sign in</button>
-        </div>
-        <p class="fine-print">
-          Passwords are stored as a one-way hash on this device. If you forget your password,
-          ask the facilitator to reset it (your previous encrypted answers for that account will be cleared).
-          Do not reuse an important password. AI settings are facilitator-only and are not available to public visitors.
-        </p>
-      </form>
-    </section>
-
-    <!-- Landing -->
-    <section class="panel panel--landing" id="panel-landing" aria-labelledby="landing-title" hidden>
-      <p class="eyebrow" id="landing-eyebrow">Microsoft product modules</p>
-      <h1 id="landing-title">Welcome back</h1>
-      <p class="lede" id="landing-lede">
-        Pick a product section. Each module asks focused initial questions about that application,
-        then crafts one clarifying follow-up from your answer — listening for culture, relationships,
-        and Indigenous understanding of the situation.
-      </p>
-
-      <div class="module-picker" id="module-picker" role="listbox" aria-label="Product modules"></div>
-
-      <ul class="promise-list">
-        <li>Modular sections — each Microsoft product has its own key questions.</li>
-        <li>Straightforward first — every question starts plain and short.</li>
-        <li>One crafted follow-up — clarification is built from your answer.</li>
+    <section class="card" aria-labelledby="expect">
+      <h2 id="expect">A few questions, in your own words.</h2>
+      <ul>
+        <li>Share as much or as little as you feel comfortable sharing.</li>
+        <li>You may be offered an AI-generated follow-up to help clarify your answer.</li>
+        <li>Skip a question, or continue when you have said enough.</li>
+        <li>Review and correct your summary before choosing to share it.</li>
       </ul>
-      <div class="cta-row">
-        <button type="button" class="primary-btn" id="begin-btn">Begin this module</button>
-        <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved survey</button>
-        <button type="button" class="ghost-btn" id="edit-bio-btn">Edit role bio</button>
-        <a class="text-link" href="#how-it-works">How this works</a>
-      </div>
-      <aside class="how-card" id="how-it-works">
-        <h2>How this works</h2>
-        <p>
-          Choose a product module (SharePoint, Teams, Excel, and more). You answer a simple
-          question about challenges or understanding. The guide then crafts a follow-up from
-          what you said — still about that product, while listening for culture, relationships,
-          and Indigenous understanding of the situation.
-        </p>
-        <p class="fine-print">
-          Your answers stay in your profile on this browser until you export them.
-          Other profiles cannot open your survey.
-        </p>
-      </aside>
+      <p class="choice">This is not a test. You do not need to know the technical terms.</p>
     </section>
 
-    <!-- Bio / role context -->
-    <section class="panel panel--bio" id="panel-bio" hidden>
-      <p class="eyebrow">Before the module</p>
-      <h2>Your role and relationships</h2>
-      <p class="lede">
-        A few bio questions help the guide ask follow-ups in the context of your role
-        and how you relate to others — not as a generic skill check.
+    <div class="actions">
+      <a class="button" href="survey.html" id="begin">Let’s begin <span aria-hidden="true">→</span></a>
+      <span>Your experience is the starting point.</span>
+    </div>
+
+    <details>
+      <summary>Before you share: how your information will be used</summary>
+      <p><strong>Draft for facilitator review — confirm before participant use.</strong></p>
+      <ul>
+        <li><strong>Who can see your answers?</strong> You can review your own draft summary. Facilitators may see attendance details. Full answers stay in your account unless you choose to share or export them.</li>
+        <li><strong>Where is information stored?</strong> On the device/browser you use for this survey (encrypted with your account password). This is a GitHub Pages site with no separate survey database by default.</li>
+        <li><strong>Email and password:</strong> Used so you can return to your own draft. Entering an email identifies an account; it is not government ID verification.</li>
+        <li><strong>AI follow-ups:</strong> Optional clarifying questions may be generated after an answer. If a remote AI service is enabled by facilitators, only what is needed for that follow-up would be sent — this must be confirmed before launch.</li>
+        <li><strong>Correct or delete:</strong> You should be able to review and correct your summary before sharing. Ask a facilitator if you need a password reset or account answers cleared.</li>
+      </ul>
+      <p>
+        This welcome page is part of <strong>LDMLFN training development</strong>.
+        Completing the survey is one way to contribute; it is not the whole training program.
       </p>
-      <form class="auth-card" id="bio-form" autocomplete="on">
-        <label class="field" for="bio-role">
-          <span>What role or kind of work do you hold?</span>
-          <input type="text" id="bio-role" name="role" required
-            placeholder="e.g. facilitator, coordinator, instructor, admin, learner…">
-        </label>
-        <label class="field" for="bio-relationships">
-          <span>Who do you mainly work with or support in that role?</span>
-          <textarea id="bio-relationships" name="relationships" rows="3" required
-            placeholder="e.g. community partners, instructors, leadership, students, peers…"></textarea>
-        </label>
-        <label class="field" for="bio-org">
-          <span>Optional — team, program, or community context</span>
-          <input type="text" id="bio-org" name="orgContext"
-            placeholder="e.g. learning team, nonprofit program, department…">
-        </label>
-        <p class="auth-status" id="bio-status" role="status"></p>
-        <div class="cta-row">
-          <button type="submit" class="primary-btn" id="bio-submit">Save and continue</button>
-          <button type="button" class="ghost-btn" id="bio-back">Back</button>
-        </div>
-        <p class="fine-print">
-          Role and relationships stay with your profile and shape how questions are framed.
-          Other people may see your role on the people list; they cannot open your answers.
-        </p>
-      </form>
-    </section>
+    </details>
 
-    <!-- Dialogue -->
-    <section class="panel panel--dialogue" id="panel-dialogue" aria-live="polite" hidden>
-      <div class="progress" aria-hidden="true">
-        <div class="progress__bar" id="progress-bar"></div>
-      </div>
-      <p class="stage-label" id="stage-label">Opening</p>
-
-      <div class="thread" id="thread"></div>
-
-      <form class="reply" id="reply-form" autocomplete="off">
-        <label class="reply__label" for="reply-input" id="reply-label">Your response</label>
-        <textarea id="reply-input" name="reply" rows="4" required
-          placeholder="Share as much or as little as feels right…"></textarea>
-        <div class="reply__meta">
-          <p class="hint" id="hint-text">There is no wrong length. Context helps more than polish.</p>
-          <div class="reply__actions">
-            <button type="button" class="ghost-btn" id="skip-btn" hidden>Skip this thread</button>
-            <button type="submit" class="primary-btn" id="send-btn">Continue</button>
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <!-- Closing / export -->
-    <section class="panel panel--close" id="panel-close" hidden>
-      <p class="eyebrow">Gratitude &amp; next steps</p>
-      <h2>Thank you for sharing your path</h2>
-      <p class="lede" id="close-summary">
-        Your experience map is ready. Review the portrait below, then export or submit it for LDMLFN microtraining design.
-      </p>
-
-      <article class="portrait" id="experience-portrait"></article>
-
-      <div class="cta-row">
-        <button type="button" class="primary-btn" id="export-btn">Download experience map</button>
-        <button type="button" class="ghost-btn" id="copy-btn">Copy summary</button>
-        <button type="button" class="ghost-btn" id="again-btn">New dialogue</button>
-      </div>
-      <p class="fine-print" id="copy-status" role="status"></p>
-    </section>
+    <p class="note">
+      Welcome page for the SharePoint listening survey. Participation options and information-handling
+      details must be confirmed by LDMLFN before wider use.
+    </p>
   </main>
 
-  <footer class="foot">
-    <p>LDMLFN Microtraining · Relational capture of Microsoft product experience</p>
-  </footer>
-
-  <script src="profiles.js"></script>
-  <script src="insights.js"></script>
-  <script src="modules/registry.js"></script>
-  <script src="modules/sharepoint.js"></script>
-  <script src="modules/teams.js"></script>
-  <script src="modules/excel.js"></script>
-  <script src="modules/outlook.js"></script>
-  <script src="modules/onedrive.js"></script>
-  <script src="modules/copilot.js"></script>
-  <script src="clarify.js"></script>
-  <script src="app.js"></script>
+  <footer>LDMLFN training development · SharePoint listening survey · Draft concept</footer>
 </body>
-
 </html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDMLFN Microtraining | Microsoft Experience Dialogue</title>
+  <meta name="description"
+    content="LDMLFN Microtraining — a relational, AI-guided dialogue that captures lived experience with Microsoft products.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="atmosphere__glow atmosphere__glow--a"></div>
+    <div class="atmosphere__glow atmosphere__glow--b"></div>
+    <div class="atmosphere__texture"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="topbar__home" href="index.html">Welcome</a>
+    <div class="topbar__brand">
+      <span class="topbar__mark">LDMLFN</span>
+      <span class="topbar__sub">SharePoint survey</span>
+    </div>
+    <div class="topbar__actions">
+      <a class="text-link topbar__people" href="people.html" title="Facilitator access">Facilitator</a>
+      <span class="topbar__user" id="user-chip" hidden></span>
+      <button type="button" class="ghost-btn" id="signout-btn" hidden>Sign out</button>
+      <button type="button" class="ghost-btn" id="restart-btn" hidden>Start over</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- Access / login -->
+    <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
+      <p class="eyebrow">SharePoint listening survey</p>
+      <h1 id="auth-title">Create an account or sign in</h1>
+      <p class="lede">
+        Use your email and a password so only you can open your answers.
+        After you sign in, you can begin the SharePoint questions.
+      </p>
+
+      <div class="access-link-card" id="access-link-card">
+        <p class="access-link-card__label">Share this access link</p>
+        <div class="access-link-card__row">
+          <code id="access-link-url"></code>
+          <button type="button" class="ghost-btn" id="copy-access-link">Copy link</button>
+        </div>
+        <p class="fine-print" id="copy-link-status" role="status"></p>
+      </div>
+
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true">Sign in</button>
+        <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <form class="auth-card" id="auth-form" autocomplete="on">
+        <h2 class="auth-card__title" id="auth-card-title">Sign in</h2>
+        <p class="auth-card__hint" id="auth-card-hint">Use your email and password to open your own answers only.</p>
+
+        <label class="field" for="auth-email">
+          <span>Email</span>
+          <input type="email" id="auth-email" name="email" required
+            placeholder="you@organization.org" autocomplete="username" inputmode="email" spellcheck="false">
+        </label>
+
+        <label class="field" for="auth-name" id="auth-name-field" hidden>
+          <span>Display name</span>
+          <input type="text" id="auth-name" name="displayName" placeholder="How should we greet you?" autocomplete="nickname">
+        </label>
+
+        <label class="field" for="auth-password">
+          <span>Password</span>
+          <input type="password" id="auth-password" name="password" required minlength="8"
+            placeholder="At least 8 characters" autocomplete="current-password">
+        </label>
+
+        <label class="field" for="auth-password-confirm" id="auth-confirm-field" hidden>
+          <span>Confirm password</span>
+          <input type="password" id="auth-password-confirm" name="passwordConfirm" minlength="8"
+            placeholder="Re-enter password" autocomplete="new-password">
+        </label>
+
+        <p class="auth-status" id="auth-status" role="status"></p>
+
+        <div class="cta-row">
+          <button type="submit" class="primary-btn" id="auth-submit">Sign in</button>
+        </div>
+        <p class="fine-print">
+          Passwords are stored as a one-way hash on this device. If you forget your password,
+          ask the facilitator to reset it (your previous encrypted answers for that account will be cleared).
+          Do not reuse an important password. AI settings are facilitator-only and are not available to public visitors.
+        </p>
+      </form>
+    </section>
+
+    <!-- Landing -->
+    <section class="panel panel--landing" id="panel-landing" aria-labelledby="landing-title" hidden>
+      <p class="eyebrow" id="landing-eyebrow">Microsoft product modules</p>
+      <h1 id="landing-title">Welcome back</h1>
+      <p class="lede" id="landing-lede">
+        Pick a product section. Each module asks focused initial questions about that application,
+        then crafts one clarifying follow-up from your answer — listening for culture, relationships,
+        and Indigenous understanding of the situation.
+      </p>
+
+      <div class="module-picker" id="module-picker" role="listbox" aria-label="Product modules"></div>
+
+      <ul class="promise-list">
+        <li>Modular sections — each Microsoft product has its own key questions.</li>
+        <li>Straightforward first — every question starts plain and short.</li>
+        <li>One crafted follow-up — clarification is built from your answer.</li>
+      </ul>
+      <div class="cta-row">
+        <button type="button" class="primary-btn" id="begin-btn">Begin this module</button>
+        <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved survey</button>
+        <button type="button" class="ghost-btn" id="edit-bio-btn">Edit role bio</button>
+        <a class="text-link" href="#how-it-works">How this works</a>
+      </div>
+      <aside class="how-card" id="how-it-works">
+        <h2>How this works</h2>
+        <p>
+          Choose a product module (SharePoint, Teams, Excel, and more). You answer a simple
+          question about challenges or understanding. The guide then crafts a follow-up from
+          what you said — still about that product, while listening for culture, relationships,
+          and Indigenous understanding of the situation.
+        </p>
+        <p class="fine-print">
+          Your answers stay in your profile on this browser until you export them.
+          Other profiles cannot open your survey.
+        </p>
+      </aside>
+    </section>
+
+    <!-- Bio / role context -->
+    <section class="panel panel--bio" id="panel-bio" hidden>
+      <p class="eyebrow">Before the module</p>
+      <h2>Your role and relationships</h2>
+      <p class="lede">
+        A few bio questions help the guide ask follow-ups in the context of your role
+        and how you relate to others — not as a generic skill check.
+      </p>
+      <form class="auth-card" id="bio-form" autocomplete="on">
+        <label class="field" for="bio-role">
+          <span>What role or kind of work do you hold?</span>
+          <input type="text" id="bio-role" name="role" required
+            placeholder="e.g. facilitator, coordinator, instructor, admin, learner…">
+        </label>
+        <label class="field" for="bio-relationships">
+          <span>Who do you mainly work with or support in that role?</span>
+          <textarea id="bio-relationships" name="relationships" rows="3" required
+            placeholder="e.g. community partners, instructors, leadership, students, peers…"></textarea>
+        </label>
+        <label class="field" for="bio-org">
+          <span>Optional — team, program, or community context</span>
+          <input type="text" id="bio-org" name="orgContext"
+            placeholder="e.g. learning team, nonprofit program, department…">
+        </label>
+        <p class="auth-status" id="bio-status" role="status"></p>
+        <div class="cta-row">
+          <button type="submit" class="primary-btn" id="bio-submit">Save and continue</button>
+          <button type="button" class="ghost-btn" id="bio-back">Back</button>
+        </div>
+        <p class="fine-print">
+          Role and relationships stay with your profile and shape how questions are framed.
+          Other people may see your role on the people list; they cannot open your answers.
+        </p>
+      </form>
+    </section>
+
+    <!-- Dialogue -->
+    <section class="panel panel--dialogue" id="panel-dialogue" aria-live="polite" hidden>
+      <div class="progress" aria-hidden="true">
+        <div class="progress__bar" id="progress-bar"></div>
+      </div>
+      <p class="stage-label" id="stage-label">Opening</p>
+
+      <div class="thread" id="thread"></div>
+
+      <form class="reply" id="reply-form" autocomplete="off">
+        <label class="reply__label" for="reply-input" id="reply-label">Your response</label>
+        <textarea id="reply-input" name="reply" rows="4" required
+          placeholder="Share as much or as little as feels right…"></textarea>
+        <div class="reply__meta">
+          <p class="hint" id="hint-text">There is no wrong length. Context helps more than polish.</p>
+          <div class="reply__actions">
+            <button type="button" class="ghost-btn" id="skip-btn" hidden>Skip this thread</button>
+            <button type="submit" class="primary-btn" id="send-btn">Continue</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Closing / export -->
+    <section class="panel panel--close" id="panel-close" hidden>
+      <p class="eyebrow">Gratitude &amp; next steps</p>
+      <h2>Thank you for sharing your path</h2>
+      <p class="lede" id="close-summary">
+        Your experience map is ready. Review the portrait below, then export or submit it for LDMLFN microtraining design.
+      </p>
+
+      <article class="portrait" id="experience-portrait"></article>
+
+      <div class="cta-row">
+        <button type="button" class="primary-btn" id="export-btn">Download experience map</button>
+        <button type="button" class="ghost-btn" id="copy-btn">Copy summary</button>
+        <button type="button" class="ghost-btn" id="again-btn">New dialogue</button>
+      </div>
+      <p class="fine-print" id="copy-status" role="status"></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>LDMLFN Microtraining · Relational capture of Microsoft product experience</p>
+  </footer>
+
+  <script src="profiles.js"></script>
+  <script src="insights.js"></script>
+  <script src="modules/registry.js"></script>
+  <script src="modules/sharepoint.js"></script>
+  <script src="modules/teams.js"></script>
+  <script src="modules/excel.js"></script>
+  <script src="modules/outlook.js"></script>
+  <script src="modules/onedrive.js"></script>
+  <script src="modules/copilot.js"></script>
+  <script src="clarify.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

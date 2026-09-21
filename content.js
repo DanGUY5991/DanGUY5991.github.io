@@ -67,7 +67,7 @@ const profileData = {
         {
             title: "LDMLFN Microtraining",
             type: "Listening tool · SharePoint pilot",
-            desc: "A GitHub Pages listening survey to hear what people already do with SharePoint, what helps or gets in the way, and how working with others affects their experience — to help shape practical training.",
+            desc: "A welcome page and SharePoint listening survey to hear what already works, what gets in the way, and what people want to do more easily — to help shape practical training.",
             href: "ldmlfn/"
         },
         {
