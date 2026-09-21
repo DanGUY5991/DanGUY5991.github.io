@@ -1,0 +1,11 @@
+{
+  "name": "DanGUY5991.github.io",
+  "install": "python3 --version",
+  "terminals": [
+    {
+      "name": "static-server",
+      "command": "python3 -m http.server 3000 --bind 0.0.0.0"
+    }
+  ],
+  "ports": [3000]
+}
