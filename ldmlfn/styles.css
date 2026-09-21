@@ -456,17 +456,6 @@ h2 {
   color: var(--ink-faint);
 }
 
-.how-card {
-  margin-top: 1rem;
-  padding: 1.4rem 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--mist);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow);
-  animation: rise 0.9s 0.15s var(--ease) both;
-}
-
 .how-card h2 {
   font-size: 1.2rem;
   margin-bottom: 0.6rem;
