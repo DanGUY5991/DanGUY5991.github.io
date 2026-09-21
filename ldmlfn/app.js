@@ -274,7 +274,8 @@
     const short = text.trim().replace(/\s+/g, " ");
     const snippet = short.length > 160 ? `${short.slice(0, 157)}…` : short;
     if (products.length) {
-      return `What I’m hearing is that ${listProducts(products)} is part of your path — especially around: “${snippet}”`;
+      const verb = products.length === 1 ? "is" : "are";
+      return `What I’m hearing is that ${listProducts(products)} ${verb} part of your path — especially around: “${snippet}”`;
     }
     return `I’m holding what you shared: “${snippet}” — thank you for offering that context.`;
   }
@@ -661,9 +662,7 @@
   });
 
   els.restart.addEventListener("click", () => {
-    if (confirm("Start over? Your current dialogue in this browser will be cleared.")) {
-      resetAll();
-    }
+    resetAll();
   });
 
   els.again?.addEventListener("click", resetAll);
@@ -685,8 +684,17 @@
     }
   });
 
-  // Resume in-progress sessions
-  const saved = load();
+  // Resume in-progress sessions (unless ?fresh=1 or ?clear=1)
+  const params = new URLSearchParams(window.location.search);
+  const forceFresh = params.has("fresh") || params.has("clear");
+  if (forceFresh) {
+    clearSaved();
+    if (window.history.replaceState) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }
+
+  const saved = forceFresh ? null : load();
   if (saved && saved.stage && saved.stage !== "close" && saved.turns?.length) {
     session = saved;
     startDialogue(true);
