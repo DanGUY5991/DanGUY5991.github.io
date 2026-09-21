@@ -12,9 +12,18 @@ See:
 
 | Item | Value |
 | --- | --- |
-| Live survey URL (after merge to `main`) | https://danguy5991.github.io/ldmlfn/ |
+| Live welcome URL (after merge to `main`) | https://danguy5991.github.io/ldmlfn/ |
+| Survey (after Let’s begin) | https://danguy5991.github.io/ldmlfn/survey.html |
 | Stack | Static HTML / CSS / JS only |
 | Build / deploy | None — push to `main` |
+
+## Pages
+
+| Page | Role |
+| --- | --- |
+| `index.html` | Welcome / purpose (SharePoint pilot) |
+| `survey.html` | Account sign-in + listening survey |
+| `people.html` | Facilitator roster (secret required) |
 
 ## Accounts (email + password)
 
