@@ -11,6 +11,9 @@
   const Clarify = window.LDMLFNClarify;
   const AI_ENDPOINT_KEY = "ldmlfn-ai-endpoint";
 
+  // Pilot: cross-person coordinated questions stay off until consent design is approved.
+  const CROSS_PERSON_SUPPLEMENTAL = false;
+
   const els = {
     auth: document.getElementById("panel-auth"),
     landing: document.getElementById("panel-landing"),
@@ -283,6 +286,7 @@
   }
 
   function contributeInsight(answer, questionId, kind) {
+    if (!CROSS_PERSON_SUPPLEMENTAL) return;
     const Insights = window.LDMLFNInsights;
     if (!Insights || !answer) return;
     const themes = Clarify.detectThemes(answer);
@@ -377,7 +381,8 @@
   }
 
   async function maybeAskSupplementalThenClose() {
-    if (session.supplementalAsked) {
+    if (!CROSS_PERSON_SUPPLEMENTAL || session.supplementalAsked) {
+      session.supplementalAsked = true;
       await askClosing();
       return;
     }
@@ -530,7 +535,7 @@
     Profiles.markComplete();
     renderPortrait();
     showPanel("close");
-    els.closeSummary.textContent = `Your ${goal().application} listening map is ready — including clarifications and any cross-experience supplemental drawn from other participants’ perceptions.`;
+    els.closeSummary.textContent = `Your ${goal().application} draft summary is ready. Review it below — you can treat this as a draft of your answers, not an assessment.`;
   }
 
   function renderPortrait() {
