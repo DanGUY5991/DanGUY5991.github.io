@@ -28,15 +28,64 @@
       <span class="topbar__mark">LDMLFN</span>
       <span class="topbar__sub">Microtraining</span>
     </div>
-    <button type="button" class="ghost-btn" id="restart-btn" hidden>Start over</button>
+    <div class="topbar__actions">
+      <a class="text-link topbar__people" href="people.html">People</a>
+      <span class="topbar__user" id="user-chip" hidden></span>
+      <button type="button" class="ghost-btn" id="signout-btn" hidden>Sign out</button>
+      <button type="button" class="ghost-btn" id="restart-btn" hidden>Start over</button>
+    </div>
   </header>
 
   <main class="shell">
-    <!-- Landing -->
-    <section class="panel panel--landing is-active" id="panel-landing" aria-labelledby="landing-title">
-      <p class="eyebrow">Remote experience dialogue</p>
-      <h1 id="landing-title">LDMLFN Microtraining</h1>
+    <!-- Access / login -->
+    <section class="panel panel--auth is-active" id="panel-auth" aria-labelledby="auth-title">
+      <p class="eyebrow">Access link</p>
+      <h1 id="auth-title">LDMLFN Microtraining</h1>
       <p class="lede">
+        Sign in with your email to create a profile or continue where you left off.
+        Each profile keeps its own dialogue — people can see who has joined, but not each other’s answers.
+      </p>
+
+      <div class="access-link-card" id="access-link-card">
+        <p class="access-link-card__label">Share this access link</p>
+        <div class="access-link-card__row">
+          <code id="access-link-url"></code>
+          <button type="button" class="ghost-btn" id="copy-access-link">Copy link</button>
+        </div>
+        <p class="fine-print" id="copy-link-status" role="status"></p>
+      </div>
+
+      <form class="auth-card" id="auth-form" autocomplete="on">
+        <h2 class="auth-card__title">Simple sign-in</h2>
+        <p class="auth-card__hint">Use the same email later to continue your profile.</p>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="auth-email" name="email" required placeholder="you@organization.org" autocomplete="email">
+        </label>
+
+        <label class="field">
+          <span>Display name</span>
+          <input type="text" id="auth-name" name="name" placeholder="How should we greet you?" autocomplete="name">
+        </label>
+
+        <p class="auth-status" id="auth-status" role="status"></p>
+
+        <div class="cta-row">
+          <button type="submit" class="primary-btn" id="auth-submit">Enter with this email</button>
+        </div>
+        <p class="fine-print">
+          No password — your email is your profile key. Names and emails appear on the shared people list;
+          dialogue answers stay inside your profile only.
+        </p>
+      </form>
+    </section>
+
+    <!-- Landing -->
+    <section class="panel panel--landing" id="panel-landing" aria-labelledby="landing-title" hidden>
+      <p class="eyebrow">Remote experience dialogue</p>
+      <h1 id="landing-title">Welcome back</h1>
+      <p class="lede" id="landing-lede">
         A guided conversation that listens for your lived experience with Microsoft tools—
         then gently clarifies context so training can meet you where you already stand.
       </p>
@@ -47,6 +96,7 @@
       </ul>
       <div class="cta-row">
         <button type="button" class="primary-btn" id="begin-btn">Begin the dialogue</button>
+        <button type="button" class="ghost-btn" id="resume-btn" hidden>Continue saved dialogue</button>
         <a class="text-link" href="#how-it-works">How this works</a>
       </div>
       <aside class="how-card" id="how-it-works">
@@ -57,8 +107,8 @@
           and relationships that matter in your day-to-day work.
         </p>
         <p class="fine-print">
-          Responses stay in this browser until you export or submit them.
-          Nothing is sent automatically.
+          Your answers stay in your profile on this browser until you export them.
+          Other profiles cannot open your dialogue.
         </p>
       </aside>
     </section>
@@ -109,6 +159,7 @@
     <p>LDMLFN Microtraining · Relational capture of Microsoft product experience</p>
   </footer>
 
+  <script src="profiles.js"></script>
   <script src="app.js"></script>
 </body>
 

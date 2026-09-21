@@ -2,6 +2,25 @@
 
 Remote, relational experience dialogue for capturing lived experience with Microsoft products.
 
+## Access link
+
+Share: `/ldmlfn/` (or `ldmlfn/index.html` on the site).
+
+Participants:
+
+1. Open the access link
+2. Sign in with **email** (+ optional display name)
+3. **Create** a profile on first visit, or **continue** with the same email later
+4. Complete their own dialogue only
+
+## People & tracking
+
+Open `/ldmlfn/people.html` for a **visible roster** of who has signed in (name, email, status, visits, last access) plus an access log.
+
+- People are **not hidden**
+- Dialogue answers are **not shared across profiles**
+- Continuing someone else’s dialogue requires signing in with **their email**
+
 ## What it is
 
 A browser-based microtraining intake form that:
@@ -23,40 +42,24 @@ Dialogue is shaped by Indigenous-informed knowledge practices applied carefully:
 4. **Clarify with care** — follow-ups seek missing context, not interrogation
 5. **Gratitude and reciprocity** — closing names what was shared and what comes next
 
-## Run locally
+See also `PROJECT-GUIDANCE.md` for structural decisions.
 
-Open `ldmlfn/index.html` via any static server, or visit `/ldmlfn/` on the GitHub Pages site.
+## Run locally
 
 ```bash
 npx serve .
 # then open http://localhost:3000/ldmlfn/
 ```
 
-## Optional remote AI endpoint
-
-By default the adaptive engine runs fully client-side (product detection, vagueness checks, reflective prompts, deepening paths).
-
-To plug in a real model backend:
+## Optional endpoints
 
 ```js
 LDMLFN.setAiEndpoint("https://your-api.example.com/ldmlfn");
+LDMLFN.setSyncEndpoint("https://your-api.example.com/ldmlfn-sync");
 ```
 
-Expected JSON response:
+Clear with `null`.
 
-```json
-{
-  "prompt": "Next question text…",
-  "hint": "Optional helper text",
-  "stage": "deepen",
-  "allowSkip": true,
-  "reflection": "Optional reflection of the last answer",
-  "done": false
-}
-```
+## Privacy note
 
-Clear with `LDMLFN.setAiEndpoint(null)`.
-
-## Privacy
-
-Answers are stored in `localStorage` in the participant’s browser until they export or clear the session. Nothing is uploaded unless you wire a submission endpoint.
+v1 stores profiles in the participant browser’s `localStorage` registry. For multi-device facilitator dashboards, configure a sync endpoint. The people page never exposes another user’s transcript.

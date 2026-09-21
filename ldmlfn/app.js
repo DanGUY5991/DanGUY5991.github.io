@@ -1,11 +1,11 @@
 /**
  * LDMLFN Microtraining — adaptive experience dialogue
  * Relational, story-first capture of Microsoft product experience.
- * Local adaptive guide with optional remote AI endpoint.
+ * Requires an email profile; sessions are isolated per profile.
  */
 
 (() => {
-  const STORAGE_KEY = "ldmlfn-microtraining-session-v1";
+  const Profiles = window.LDMLFNProfiles;
   const AI_ENDPOINT_KEY = "ldmlfn-ai-endpoint";
 
   const PRODUCTS = [
@@ -42,10 +42,21 @@
   };
 
   const els = {
+    auth: document.getElementById("panel-auth"),
     landing: document.getElementById("panel-landing"),
     dialogue: document.getElementById("panel-dialogue"),
     close: document.getElementById("panel-close"),
+    authForm: document.getElementById("auth-form"),
+    authEmail: document.getElementById("auth-email"),
+    authName: document.getElementById("auth-name"),
+    authStatus: document.getElementById("auth-status"),
+    accessLinkUrl: document.getElementById("access-link-url"),
+    copyAccessLink: document.getElementById("copy-access-link"),
+    copyLinkStatus: document.getElementById("copy-link-status"),
+    userChip: document.getElementById("user-chip"),
+    signout: document.getElementById("signout-btn"),
     begin: document.getElementById("begin-btn"),
+    resume: document.getElementById("resume-btn"),
     restart: document.getElementById("restart-btn"),
     again: document.getElementById("again-btn"),
     thread: document.getElementById("thread"),
@@ -62,32 +73,12 @@
     copyBtn: document.getElementById("copy-btn"),
     copyStatus: document.getElementById("copy-status"),
     closeSummary: document.getElementById("close-summary"),
+    landingTitle: document.getElementById("landing-title"),
+    landingLede: document.getElementById("landing-lede"),
   };
 
-  /** @type {Session} */
   let session = createSession();
   let busy = false;
-
-  /**
-   * @typedef {Object} Turn
-   * @property {"guide"|"you"} role
-   * @property {string} text
-   * @property {string} [kind]
-   * @property {string} [at]
-   */
-
-  /**
-   * @typedef {Object} Session
-   * @property {string} id
-   * @property {string} startedAt
-   * @property {string} stage
-   * @property {Turn[]} turns
-   * @property {Object} context
-   * @property {string[]} askedIds
-   * @property {number} deepenCount
-   * @property {number} clarifyCount
-   * @property {Object|null} pendingPrompt
-   */
 
   function createSession() {
     return {
@@ -115,33 +106,76 @@
     };
   }
 
+  function requireProfile() {
+    return Profiles?.getCurrent() || null;
+  }
+
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    } catch (_) {
-      /* ignore quota */
-    }
+    if (!requireProfile()) return;
+    Profiles.saveSession(session);
   }
 
   function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch (_) {
-      return null;
-    }
+    if (!requireProfile()) return null;
+    return Profiles.loadSession();
   }
 
   function clearSaved() {
-    localStorage.removeItem(STORAGE_KEY);
+    if (!requireProfile()) return;
+    Profiles.clearSession();
   }
 
   function showPanel(name) {
+    els.auth.hidden = name !== "auth";
     els.landing.hidden = name !== "landing";
     els.dialogue.hidden = name !== "dialogue";
     els.close.hidden = name !== "close";
-    els.restart.hidden = name === "landing";
+    els.restart.hidden = !(name === "dialogue" || name === "close");
+  }
+
+  function refreshUserChrome() {
+    const person = Profiles.getCurrentPublic();
+    if (!person) {
+      els.userChip.hidden = true;
+      els.signout.hidden = true;
+      els.userChip.textContent = "";
+      return;
+    }
+    els.userChip.hidden = false;
+    els.signout.hidden = false;
+    els.userChip.textContent = `${person.name} · ${person.email}`;
+  }
+
+  function enterAppShell(result) {
+    refreshUserChrome();
+    Profiles.adoptLegacySessionIfEmpty();
+
+    const person = Profiles.getCurrent();
+    const saved = load();
+
+    els.landingTitle.textContent = result?.isNew
+      ? `Welcome, ${person.name}`
+      : `Welcome back, ${person.name}`;
+    els.landingLede.textContent = result?.isNew
+      ? "Your profile is ready. Begin when you want — this dialogue stays with your email only."
+      : "Your profile is open. Continue a saved dialogue or begin a new one — other people’s answers stay out of reach.";
+
+    if (saved && saved.stage === "close" && saved.turns?.length) {
+      session = saved;
+      renderPortrait();
+      showPanel("close");
+      setProgress();
+      return;
+    }
+
+    if (saved && saved.stage !== "close" && saved.turns?.length) {
+      els.resume.hidden = false;
+      showPanel("landing");
+      return;
+    }
+
+    els.resume.hidden = true;
+    showPanel("landing");
   }
 
   function setProgress() {
@@ -306,7 +340,6 @@
       };
     }
 
-    // Clarification when last answer was thin
     const lastYou = [...session.turns].reverse().find((t) => t.role === "you");
     if (
       lastYou &&
@@ -327,7 +360,6 @@
       };
     }
 
-    // Deepen per product
     const underexplored = ctx.products.filter((id) => !ctx.productNotes[id] || ctx.productNotes[id].length < 40);
     if (underexplored.length && session.deepenCount < 4) {
       const target = underexplored[0];
@@ -401,6 +433,7 @@
             "clarify context with care",
             "honor lived Microsoft product experience",
           ],
+          person: Profiles.getCurrentPublic(),
           session: {
             stage: session.stage,
             context: session.context,
@@ -490,6 +523,10 @@
   }
 
   async function startDialogue(resume = false) {
+    if (!requireProfile()) {
+      showPanel("auth");
+      return;
+    }
     showPanel("dialogue");
     setProgress();
     els.input.value = "";
@@ -497,9 +534,10 @@
 
     if (!resume) {
       els.thread.innerHTML = "";
+      const person = Profiles.getCurrent();
       addBubble(
         "guide",
-        "Welcome. This dialogue is a listening space for your experience with Microsoft products.\n\nWe’ll move at a human pace: relationship first, then the tools that live in your work, then the growth that would matter next."
+        `Welcome, ${person.name}. This dialogue is a listening space for your experience with Microsoft products.\n\nWe’ll move at a human pace: relationship first, then the tools that live in your work, then the growth that would matter next.`
       );
       await wait(350);
       const first = buildLocalPrompt();
@@ -514,7 +552,7 @@
   }
 
   async function handleReply(text, skipped = false) {
-    if (busy) return;
+    if (busy || !requireProfile()) return;
     const cleaned = text.trim();
     if (!cleaned && !skipped) return;
 
@@ -556,6 +594,7 @@
     session.stage = "close";
     setProgress();
     save();
+    Profiles.markComplete();
     renderPortrait();
     showPanel("close");
     const n = session.context.products.length;
@@ -567,6 +606,7 @@
 
   function renderPortrait() {
     const ctx = session.context;
+    const person = Profiles.getCurrentPublic();
     const chips = ctx.products.length
       ? `<div class="chip-row">${ctx.products.map((p) => `<span class="chip">${productDisplayName(p)}</span>`).join("")}</div>`
       : "<p>No specific Microsoft products named yet — relational context still captured.</p>";
@@ -577,6 +617,8 @@
 
     els.portrait.innerHTML = `
       <h3>Experience portrait</h3>
+      <h4>Profile</h4>
+      <p>${escapeHtml(person?.name || "—")} · ${escapeHtml(person?.email || "—")}</p>
       <h4>Relation</h4>
       <p>${escapeHtml(ctx.relation || "Not yet described")}</p>
       <h4>Microsoft landscape</h4>
@@ -609,6 +651,7 @@
       project: "LDMLFN Microtraining",
       purpose: "Relational capture of Microsoft product experience for microtraining design",
       exportedAt: new Date().toISOString(),
+      person: Profiles.getCurrentPublic(),
       sessionId: session.id,
       startedAt: session.startedAt,
       context: session.context,
@@ -618,19 +661,23 @@
 
   function downloadExport() {
     const payload = buildExport();
+    const person = Profiles.getCurrentPublic();
+    const slug = (person?.email || "participant").replace(/[^a-z0-9]+/gi, "-");
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ldmlfn-experience-${session.id}.json`;
+    a.download = `ldmlfn-experience-${slug}-${session.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   async function copySummary() {
     const ctx = session.context;
+    const person = Profiles.getCurrentPublic();
     const lines = [
       "LDMLFN Microtraining — Experience summary",
+      `Person: ${person?.name || "—"} <${person?.email || "—"}>`,
       `Session: ${session.id}`,
       "",
       `Relation: ${ctx.relation || "—"}`,
@@ -647,25 +694,74 @@
     }
   }
 
-  function resetAll() {
+  function resetDialogueOnly() {
     clearSaved();
     session = createSession();
     els.thread.innerHTML = "";
     els.copyStatus.textContent = "";
+    els.resume.hidden = true;
     showPanel("landing");
   }
 
-  // Events
+  function signOutToAuth() {
+    Profiles.signOut();
+    session = createSession();
+    els.thread.innerHTML = "";
+    refreshUserChrome();
+    showPanel("auth");
+  }
+
+  const accessUrl = new URL(window.location.pathname, window.location.origin).href;
+  if (els.accessLinkUrl) els.accessLinkUrl.textContent = accessUrl;
+  els.copyAccessLink?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(accessUrl);
+      els.copyLinkStatus.textContent = "Access link copied.";
+    } catch (_) {
+      els.copyLinkStatus.textContent = "Could not copy — select the link manually.";
+    }
+  });
+
+  els.authForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    els.authStatus.textContent = "";
+    try {
+      const result = Profiles.signIn({
+        email: els.authEmail.value,
+        name: els.authName.value,
+      });
+      els.authStatus.textContent = result.isNew
+        ? "Profile created. You’re in."
+        : "Welcome back — continuing your profile.";
+      enterAppShell(result);
+    } catch (err) {
+      els.authStatus.textContent = err.message || "Could not sign in.";
+    }
+  });
+
+  els.signout?.addEventListener("click", signOutToAuth);
+
   els.begin.addEventListener("click", () => {
+    if (!requireProfile()) {
+      showPanel("auth");
+      return;
+    }
     session = createSession();
     startDialogue(false);
   });
 
-  els.restart.addEventListener("click", () => {
-    resetAll();
+  els.resume?.addEventListener("click", () => {
+    const saved = load();
+    if (!saved) return;
+    session = saved;
+    startDialogue(true);
   });
 
-  els.again?.addEventListener("click", resetAll);
+  els.restart.addEventListener("click", () => {
+    resetDialogueOnly();
+  });
+
+  els.again?.addEventListener("click", resetDialogueOnly);
 
   els.form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -684,34 +780,34 @@
     }
   });
 
-  // Resume in-progress sessions (unless ?fresh=1 or ?clear=1)
   const params = new URLSearchParams(window.location.search);
-  const forceFresh = params.has("fresh") || params.has("clear");
-  if (forceFresh) {
-    clearSaved();
+  if (params.has("fresh") || params.has("clear")) {
+    if (requireProfile()) clearSaved();
+  }
+  if (params.has("signout")) {
+    Profiles.signOut();
+  }
+  if (params.has("fresh") || params.has("clear") || params.has("signout")) {
     if (window.history.replaceState) {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }
 
-  const saved = forceFresh ? null : load();
-  if (saved && saved.stage && saved.stage !== "close" && saved.turns?.length) {
-    session = saved;
-    startDialogue(true);
-  } else if (saved?.stage === "close") {
-    session = saved;
-    renderPortrait();
-    showPanel("close");
-    setProgress();
+  if (requireProfile()) {
+    enterAppShell({ action: "continue", isNew: false });
+  } else {
+    refreshUserChrome();
+    showPanel("auth");
   }
 
-  // Optional: expose endpoint setter for integrators
   window.LDMLFN = {
     setAiEndpoint(url) {
       if (!url) localStorage.removeItem(AI_ENDPOINT_KEY);
       else localStorage.setItem(AI_ENDPOINT_KEY, url);
       return Boolean(localStorage.getItem(AI_ENDPOINT_KEY));
     },
+    setSyncEndpoint: Profiles.setSyncEndpoint,
     exportSession: buildExport,
+    listPeople: () => Profiles.listPeople(),
   };
 })();
