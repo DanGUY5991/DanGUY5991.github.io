@@ -593,9 +593,9 @@ h2 {
   background: rgba(196, 165, 116, 0.08);
 }
 
-.bubble--guide.clarify {
-  border-color: rgba(61, 143, 122, 0.4);
-  background: rgba(61, 143, 122, 0.12);
+.bubble--guide.supplemental {
+  border-color: rgba(224, 193, 143, 0.45);
+  background: rgba(196, 165, 116, 0.14);
 }
 
 .reply {

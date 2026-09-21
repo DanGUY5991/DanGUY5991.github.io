@@ -57,7 +57,7 @@ simple surface question  (module-specific)
 | I9 | Optional sync endpoint | leaning | Side-effect from profile events |
 | I12 | Modular product sections with key initial questions | decided | One registerable module per Microsoft app |
 | I13 | Surface = challenges/understanding; depth = culture/relationships/Indigenous understanding | decided | Clarifier always receives deep lenses |
-| I14 | Cross-user supplemental questions from others’ answers | leaning | Needs shared insight store + AI coordinator (queued) |
+| I14 | Cross-user supplemental questions from others’ answers | decided | Shared insight pool (`insights.js`); AI coordinates supplemental without opening full profiles |
 | I15 | Bio/role questions that contextualize later prompts | leaning | Pre-module profile fields feed clarifier context (queued) |
 
 ### Idea inbox
@@ -76,6 +76,7 @@ simple surface question  (module-specific)
 | F7 | Product module registry | `modules/registry.js` | Own UI chrome |
 | F8 | Module question banks | `modules/*.js` | Clarifier policy |
 | F9 | Clarifying follow-up craft | `clarify.js` | Hard-code per HTML page |
+| F9b | Cross-user supplemental craft | `clarify.js` + `insights.js` | Expose another user’s full transcript in the UI |
 | F10 | Dialogue runner + module picker | `app.js` | Own identity storage |
 | F11–F12 | Exports + optional sync | `app.js` / `profiles.js` | Leak other profiles |
 
@@ -86,15 +87,11 @@ simple surface question  (module-specific)
 ```
 ldmlfn/
   profiles.js
+  insights.js          → shared perception pool for cross-user AI coordination
   modules/
     registry.js
-    sharepoint.js
-    teams.js
-    excel.js
-    outlook.js
-    onedrive.js
-    copilot.js
-  clarify.js
+    sharepoint.js | teams.js | excel.js | outlook.js | onedrive.js | copilot.js
+  clarify.js           → per-answer clarify + peer-coordinated supplemental
   app.js
   people.js / people.html
   PROJECT-GUIDANCE.md
@@ -102,10 +99,12 @@ ldmlfn/
 
 **Rules**
 
-1. Identity ≠ dialogue ≠ product content ≠ clarifier.
+1. Identity ≠ dialogue ≠ product content ≠ clarifier ≠ insight pool.
 2. New product = new `modules/<id>.js` that calls `LDMLFNModules.register(...)`.
 3. Every simple question gets one crafted clarifying follow-up before the next simple question.
-4. Clarifiers dig for culture / relationships / Indigenous understanding while staying framed as app challenge/understanding.
+4. After a module’s key questions, AI may ask one **supplemental** question coordinated from other participants’ perceptions in that module (excluding the current user).
+5. Insights are short perceptions for coordination — not a backdoor into another profile’s full session.
+6. Clarifiers dig for culture / relationships / Indigenous understanding while staying framed as app challenge/understanding.
 
 ---
 
@@ -125,6 +124,7 @@ ldmlfn/
 | 2026-09-21 | Email-only login + visible roster | Track people without hiding; isolate answers |
 | 2026-09-21 | SharePoint-first listening pattern | Prove simple Q + AI clarify |
 | 2026-09-21 | Modular product sections | Focus key initial questions per Microsoft app without rewriting the runner |
+| 2026-09-21 | Cross-user insight pool + supplemental AI questions | One person’s teamwork/perception themes can inform another user’s coordinated follow-up without opening full profiles |
 
 ---
 

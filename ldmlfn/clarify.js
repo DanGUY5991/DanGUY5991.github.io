@@ -1,7 +1,9 @@
 /**
- * Craft clarifying follow-ups from a participant's initial answer.
- * Follow-ups stay framed as SharePoint (or active app) challenge/understanding,
- * while drawing out culture, relationships, and Indigenous understanding.
+ * Craft clarifying follow-ups and cross-user supplemental questions.
+ * Surface still feels like app challenge/understanding;
+ * depth listens for culture, relationships, Indigenous understanding.
+ * Supplemental questions coordinate other participants' perceptions
+ * into another person's experience — without opening their full profile.
  */
 
 (function (global) {
@@ -21,11 +23,12 @@
       [/permission|access|denied|who can|lock|secure|confidential/, "access"],
       [/version|outdated|old copy|which one|duplicate|conflict/, "versions"],
       [/folder|structure|messy|organiz|navigate|library/, "structure"],
-      [/team|people|ask someone|manager|colleague|community|partner/, "people"],
+      [/team|teams|people|ask someone|manager|colleague|community|partner|teamwork|collaborat/, "people"],
       [/train|know how|confus|don'?t understand|unclear|intimidat/, "knowing"],
       [/slow|broken|error|sync|link/, "tech"],
       [/trust|reliable|source of truth|official/, "trust"],
       [/share|handoff|approv|review|ownership/, "flow"],
+      [/meeting|channel|chat|inbox|email|calendar/, "communication"],
     ];
     checks.forEach(([re, id]) => {
       if (re.test(t)) themes.push(id);
@@ -39,17 +42,10 @@
     const themes = detectThemes(answer);
     const aim = question.clarifyAim || "understanding";
 
-    const openers = [
-      bit
-        ? `Thank you — you named something important when you said “${bit}.”`
-        : `Thank you for that answer about ${app}.`,
-      bit
-        ? `I’m holding what you shared about ${app}: “${bit}.”`
-        : `I’m listening to how ${app} shows up for you.`,
-    ];
-    const opener = openers[Math.floor(Math.random() * openers.length) % openers.length];
+    const opener = bit
+      ? `I’m holding what you shared about ${app}: “${bit}.”`
+      : `I’m listening to how ${app} shows up for you.`;
 
-    /** Prefer theme-tuned clarifiers; always bend toward culture / relationships / Indigenous understanding. */
     let probe;
     if (themes.includes("access") || themes.includes("trust")) {
       probe =
@@ -57,7 +53,7 @@
     } else if (themes.includes("finding") || themes.includes("structure")) {
       probe =
         `Can you say a little more about the culture of how knowledge is kept in ${app} — whose pathways people actually trust, and what that means for relationships when someone new needs to find their way?`;
-    } else if (themes.includes("people") || question.id === "sp-who") {
+    } else if (themes.includes("people") || themes.includes("communication") || /who/i.test(question.id || "")) {
       probe =
         `To understand that more clearly: how do relationships around ${app} shape who gets heard, who holds the knowledge, and who feels responsible when something goes missing or unclear?`;
     } else if (themes.includes("knowing")) {
@@ -77,13 +73,35 @@
     return {
       reflection: opener,
       prompt: probe,
-      hint: "Speak to people, culture, or how knowledge is cared for — as it relates to this SharePoint moment.",
+      hint: `Speak to people, culture, or how knowledge is cared for — as it relates to this ${app} moment.`,
       themes,
       source: "local",
     };
   }
 
-  async function remoteFollowUp(payload) {
+  function localSupplemental({ goal, peerInsights, personThemes = [] }) {
+    const app = goal.application;
+    const peers = peerInsights || [];
+    const lead = peers[0];
+    const who = lead?.fromName ? `${lead.fromName}` : "another participant";
+    const perception = lead?.quoteSnippet || lead?.paraphrase || "teamwork and coordination challenges";
+
+    const themeHint = personThemes.includes("people") || personThemes.includes("communication")
+      ? "teamwork and how people work together"
+      : "how this shows up in your own relationships and culture of work";
+
+    return {
+      reflection: `Others working with ${app} have shared perceptions we can learn beside — not to compare you, but to listen across experiences.`,
+      prompt:
+        `${who} described something like this with ${app}: “${snippet(perception, 150)}.”\n\nHow does that perception sit beside your experience — does it echo, differ, or reveal another side of ${themeHint} in your setting?`,
+      hint: "You can agree, disagree, or add what is missing from your side of the story.",
+      themes: lead?.themes || [],
+      source: "local-supplemental",
+      peerInsightIds: peers.map((p) => p.id),
+    };
+  }
+
+  async function remoteCraft(mode, payload) {
     const endpoint = localStorage.getItem(AI_ENDPOINT_KEY);
     if (!endpoint) return null;
 
@@ -92,14 +110,24 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "ldmlfn-clarify",
-          instructions: [
-            "Craft ONE clarifying follow-up question based on the participant's initial answer.",
-            "The survey should still feel like it is about challenges or understanding of the Microsoft application.",
-            "Underneath, clarify culture, relationships, and Indigenous understanding of the situation.",
-            "Do not lecture. Do not add multiple questions. Keep a warm, careful tone.",
-            "Do not appropriate ceremony; speak to relational care for knowledge and people.",
-          ],
+          mode,
+          instructions:
+            mode === "ldmlfn-supplemental"
+              ? [
+                  "Craft ONE supplemental question that connects another participant's perception to this person's experience.",
+                  "Example: one person's teamwork issues in Teams may illuminate another user's different experience of the same patterns.",
+                  "Do not expose full private transcripts — use the provided peer insight snippets only.",
+                  "Keep the question about the Microsoft application challenges/understanding on the surface.",
+                  "Underneath, clarify culture, relationships, and Indigenous understanding of the situation.",
+                  "Warm, careful tone. One question only.",
+                ]
+              : [
+                  "Craft ONE clarifying follow-up question based on the participant's initial answer.",
+                  "Optionally weave peer insight themes if provided, without quoting other people unless helpful.",
+                  "Surface: challenges or understanding of the Microsoft application.",
+                  "Depth: culture, relationships, Indigenous understanding of the situation.",
+                  "One question only. Warm, careful tone.",
+                ],
           goal: {
             id: payload.goal.id,
             application: payload.goal.application,
@@ -107,9 +135,10 @@
             deepLenses: payload.goal.deepLenses,
             lensDetail: global.LDMLFNSurveyGoals?.lensText(payload.goal),
           },
-          question: payload.question,
-          answer: payload.answer,
+          question: payload.question || null,
+          answer: payload.answer || null,
           person: payload.person || null,
+          peerInsights: payload.peerInsights || [],
         }),
       });
       if (!res.ok) return null;
@@ -121,6 +150,7 @@
         hint: data.hint || "Add whatever clarifies the situation for you.",
         themes: data.themes || [],
         source: "remote",
+        peerInsightIds: (payload.peerInsights || []).map((p) => p.id),
       };
     } catch (_) {
       return null;
@@ -128,14 +158,57 @@
   }
 
   async function craftFollowUp(payload) {
-    const remote = await remoteFollowUp(payload);
+    const Insights = global.LDMLFNInsights;
+    const personEmail = payload.person?.email;
+    const themes = detectThemes(payload.answer || "");
+    const peerInsights = Insights
+      ? Insights.peersForCoordination({
+          moduleId: payload.goal.id,
+          excludeEmail: personEmail,
+          themes,
+          limit: 3,
+        })
+      : [];
+
+    const remote = await remoteCraft("ldmlfn-clarify", { ...payload, peerInsights });
     if (remote) return remote;
     return localFollowUp(payload);
   }
 
+  async function craftSupplemental(payload) {
+    const Insights = global.LDMLFNInsights;
+    const personEmail = payload.person?.email;
+    const personThemes = payload.personThemes || [];
+    const peerInsights =
+      payload.peerInsights ||
+      (Insights
+        ? Insights.peersForCoordination({
+            moduleId: payload.goal.id,
+            excludeEmail: personEmail,
+            themes: personThemes,
+            limit: 5,
+          })
+        : []);
+
+    if (!peerInsights.length) return null;
+
+    const remote = await remoteCraft("ldmlfn-supplemental", {
+      ...payload,
+      peerInsights,
+    });
+    if (remote) return remote;
+    return localSupplemental({
+      goal: payload.goal,
+      peerInsights,
+      personThemes,
+    });
+  }
+
   global.LDMLFNClarify = {
     craftFollowUp,
+    craftSupplemental,
     detectThemes,
     localFollowUp,
+    localSupplemental,
   };
 })(window);

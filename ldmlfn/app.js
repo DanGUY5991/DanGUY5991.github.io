@@ -71,6 +71,8 @@
       pairs: [],
       currentPair: null,
       closingAnswer: "",
+      supplementalAsked: false,
+      supplemental: null,
     };
   }
 
@@ -206,6 +208,7 @@
     els.progress.style.width = `${pct}%`;
 
     if (session.phase === "clarify") els.stage.textContent = "Clarifying";
+    else if (session.phase === "supplemental") els.stage.textContent = "Across experiences";
     else if (session.stage === "closing") els.stage.textContent = "Closing";
     else if (session.stage === "close") els.stage.textContent = "Complete";
     else els.stage.textContent = `${goal().application} · Question ${Math.min(session.questionIndex + 1, goal().questions.length)}`;
@@ -227,7 +230,7 @@
 
   function renderBubble(turn) {
     const div = document.createElement("div");
-    div.className = `bubble bubble--${turn.role}${turn.kind === "reflect" ? " reflect" : ""}${turn.kind === "clarify" ? " clarify" : ""}`;
+    div.className = `bubble bubble--${turn.role}${turn.kind === "reflect" ? " reflect" : ""}${turn.kind === "clarify" ? " clarify" : ""}${turn.kind === "supplemental" ? " supplemental" : ""}`;
     const who = document.createElement("span");
     who.className = "bubble__who";
     who.textContent = turn.role === "guide" ? "LDMLFN guide" : "You";
@@ -251,10 +254,35 @@
     return goal().questions[session.questionIndex] || null;
   }
 
+  function contributeInsight(answer, questionId, kind) {
+    const Insights = window.LDMLFNInsights;
+    if (!Insights || !answer) return;
+    const themes = Clarify.detectThemes(answer);
+    Insights.contribute({
+      moduleId: goal().id,
+      application: goal().application,
+      questionId,
+      answer,
+      themes,
+      person: Profiles.getCurrentPublic(),
+      kind,
+    });
+  }
+
+  function collectedThemes() {
+    const themes = [];
+    session.pairs.forEach((pair) => {
+      (pair.clarification?.themes || []).forEach((t) => themes.push(t));
+      Clarify.detectThemes(pair.surfaceAnswer || "").forEach((t) => themes.push(t));
+      Clarify.detectThemes(pair.clarifyAnswer || "").forEach((t) => themes.push(t));
+    });
+    return [...new Set(themes)];
+  }
+
   async function askSurfaceQuestion() {
     const q = currentQuestion();
     if (!q) {
-      await askClosing();
+      await maybeAskSupplementalThenClose();
       return;
     }
     session.stage = "questions";
@@ -278,6 +306,7 @@
     const q = currentQuestion();
     session.phase = "clarify";
     setProgress();
+    contributeInsight(answer, q?.id, "surface");
 
     const thinking = document.createElement("div");
     thinking.className = "bubble bubble--guide";
@@ -303,6 +332,53 @@
       session.currentPair.clarification = crafted;
     }
     els.hint.textContent = crafted.hint || "Add whatever clarifies the situation.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
+  }
+
+  async function maybeAskSupplementalThenClose() {
+    if (session.supplementalAsked) {
+      await askClosing();
+      return;
+    }
+
+    const thinking = document.createElement("div");
+    thinking.className = "bubble bubble--guide";
+    thinking.innerHTML = '<span class="bubble__who">LDMLFN guide</span><p class="typing">Listening across experiences</p>';
+    els.thread.appendChild(thinking);
+
+    const crafted = await Clarify.craftSupplemental({
+      goal: goal(),
+      person: Profiles.getCurrentPublic(),
+      personThemes: collectedThemes(),
+    });
+
+    thinking.remove();
+
+    if (!crafted) {
+      session.supplementalAsked = true;
+      await askClosing();
+      return;
+    }
+
+    session.supplementalAsked = true;
+    session.stage = "questions";
+    session.phase = "supplemental";
+    session.pendingQuestionId = "peer-supplemental";
+    session.supplemental = {
+      prompt: crafted.prompt,
+      reflection: crafted.reflection,
+      peerInsightIds: crafted.peerInsightIds || [],
+      answer: "",
+    };
+
+    if (crafted.reflection) {
+      addBubble("guide", crafted.reflection, "reflect");
+      await wait(400);
+    }
+    addBubble("guide", crafted.prompt, "supplemental");
+    els.hint.textContent = crafted.hint || "Relate this to your own experience — echo, differ, or add what’s missing.";
     els.skip.hidden = false;
     setProgress();
     save();
@@ -342,10 +418,14 @@
     } else {
       restoreThread();
       els.hint.textContent =
-        session.phase === "clarify"
+        session.phase === "clarify" || session.phase === "supplemental"
           ? "Add whatever clarifies the situation."
           : "A straightforward answer is enough.";
-      els.skip.hidden = session.phase !== "clarify" && session.stage !== "closing";
+      els.skip.hidden = !(
+        session.phase === "clarify" ||
+        session.phase === "supplemental" ||
+        session.stage === "closing"
+      );
       setProgress();
     }
   }
@@ -368,6 +448,12 @@
       if (session.stage === "closing") {
         session.closingAnswer = skipped ? "" : cleaned;
         finishSession();
+      } else if (session.phase === "supplemental") {
+        if (session.supplemental) {
+          session.supplemental.answer = skipped ? "" : cleaned;
+        }
+        if (!skipped) contributeInsight(cleaned, "peer-supplemental", "supplemental");
+        await askClosing();
       } else if (session.phase === "surface") {
         if (session.currentPair) session.currentPair.surfaceAnswer = cleaned;
         await askClarification(cleaned);
@@ -377,9 +463,10 @@
           session.pairs.push(session.currentPair);
           session.currentPair = null;
         }
+        if (!skipped) contributeInsight(cleaned, session.pendingQuestionId, "clarify");
         session.questionIndex += 1;
         if (session.questionIndex >= goal().questions.length) {
-          await askClosing();
+          await maybeAskSupplementalThenClose();
         } else {
           await askSurfaceQuestion();
         }
@@ -400,7 +487,7 @@
     Profiles.markComplete();
     renderPortrait();
     showPanel("close");
-    els.closeSummary.textContent = `Your ${goal().application} listening map is ready — surface answers plus clarifying follow-ups about culture, relationships, and understanding.`;
+    els.closeSummary.textContent = `Your ${goal().application} listening map is ready — including clarifications and any cross-experience supplemental drawn from other participants’ perceptions.`;
   }
 
   function renderPortrait() {
@@ -417,6 +504,12 @@
       })
       .join("");
 
+    const supplementalHtml = session.supplemental
+      ? `<h4>Across experiences</h4>
+         <p><strong>Coordinated question:</strong> ${escapeHtml(truncate(session.supplemental.prompt || "—", 260))}</p>
+         <p><strong>Your response:</strong> ${escapeHtml(truncate(session.supplemental.answer || "—", 280))}</p>`
+      : "";
+
     els.portrait.innerHTML = `
       <h3>${escapeHtml(goal().application)} experience portrait</h3>
       <h4>Profile</h4>
@@ -424,6 +517,7 @@
       <h4>Survey goal</h4>
       <p>${escapeHtml(goal().surfaceFrame)}</p>
       ${pairsHtml || "<p>No completed question pairs yet.</p>"}
+      ${supplementalHtml}
       <h4>Closing note</h4>
       <p>${escapeHtml(session.closingAnswer || "—")}</p>
     `;
@@ -456,6 +550,7 @@
       sessionId: session.id,
       startedAt: session.startedAt,
       pairs: session.pairs,
+      supplemental: session.supplemental,
       closingAnswer: session.closingAnswer,
       transcript: session.turns,
     };
@@ -616,5 +711,6 @@
     activeGoal: () => goal(),
     listModules: () => Modules.list(),
     setModule: (id) => Modules.setSelected(id),
+    exportInsights: () => window.LDMLFNInsights?.exportPool(),
   };
 })();
