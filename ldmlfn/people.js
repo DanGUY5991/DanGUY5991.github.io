@@ -27,7 +27,7 @@
   function render() {
     const people = Profiles.listPeople();
     if (!people.length) {
-      peopleBody.innerHTML = `<tr><td colspan="5">No one has signed in on this browser yet. Share the access link to begin.</td></tr>`;
+      peopleBody.innerHTML = `<tr><td colspan="6">No one has signed in on this browser yet. Share the access link to begin.</td></tr>`;
     } else {
       peopleBody.innerHTML = people
         .map(
@@ -35,6 +35,7 @@
         <tr>
           <td>${escapeHtml(p.name)}</td>
           <td>${escapeHtml(p.email)}</td>
+          <td>${escapeHtml(p.role || "—")}</td>
           <td><span class="status-pill status-pill--${p.status}">${statusLabel[p.status] || p.status}</span></td>
           <td>${p.accessCount}</td>
           <td>${escapeHtml(formatWhen(p.lastAccessAt))}</td>

@@ -58,7 +58,7 @@ simple surface question  (module-specific)
 | I12 | Modular product sections with key initial questions | decided | One registerable module per Microsoft app |
 | I13 | Surface = challenges/understanding; depth = culture/relationships/Indigenous understanding | decided | Clarifier always receives deep lenses |
 | I14 | Cross-user supplemental questions from others’ answers | decided | Shared insight pool (`insights.js`); AI coordinates supplemental without opening full profiles |
-| I15 | Bio/role questions that contextualize later prompts | leaning | Pre-module profile fields feed clarifier context (queued) |
+| I15 | Bio/role questions that contextualize later prompts | decided | Bio panel before module; role + relationships frame surface Qs and AI clarify/supplemental |
 
 ### Idea inbox
 
@@ -73,6 +73,7 @@ simple surface question  (module-specific)
 | --- | --- | --- | --- |
 | F1 | Access link | `index.html` | Bundle with dialogue |
 | F2–F6 | Sign-in, isolation, roster, access log | `profiles.js` / `people.*` | Cross-profile transcripts |
+| F2b | Bio (role, relationships, org context) | `profiles.js` + bio panel | Be optional forever — required before first module run |
 | F7 | Product module registry | `modules/registry.js` | Own UI chrome |
 | F8 | Module question banks | `modules/*.js` | Clarifier policy |
 | F9 | Clarifying follow-up craft | `clarify.js` | Hard-code per HTML page |
@@ -125,6 +126,7 @@ ldmlfn/
 | 2026-09-21 | SharePoint-first listening pattern | Prove simple Q + AI clarify |
 | 2026-09-21 | Modular product sections | Focus key initial questions per Microsoft app without rewriting the runner |
 | 2026-09-21 | Cross-user insight pool + supplemental AI questions | One person’s teamwork/perception themes can inform another user’s coordinated follow-up without opening full profiles |
+| 2026-09-21 | Bio role + relationships before modules | Later questions and clarifiers are framed in the person’s role and relations to others |
 
 ---
 
