@@ -263,6 +263,14 @@ h2 {
   color: var(--cedar);
 }
 
+.promise-list {
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.85rem;
+}
+
 .promise-list li {
   position: relative;
   padding-left: 1.4rem;

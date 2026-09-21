@@ -3,92 +3,81 @@
 **Role of this file:** high-level product guidance that can change code structure.
 Update this before large refactors. Prefer amending ideas here over inventing new modules ad hoc.
 
-This is living intent, not implementation trivia. README covers how to run; code holds details.
-
 ---
 
 ## 1. Purpose
 
 Capture **lived experience with Microsoft applications** through a remote survey dialogue so LDMLFN can design microtraining that meets people where they already stand.
 
-**Surface feel:** collecting information about challenges of using the target app, and what people understand about it.
+**Surface feel:** challenges of using the target app, and what people understand about it.
 
 **Deeper capture:** culture, relationships, and Indigenous understanding of the situations around that tool.
 
-This is not a skill quiz. It is a listening instrument.
-
 ---
 
-## 2. Survey goals (Microsoft applications)
+## 2. Product modules (structure-critical)
 
-Surveys are organized by **application goal**. One goal is active at a time.
+Each Microsoft product is a **modular section** with its own **key initial questions**.
 
-| Goal ID | Application | Status | Notes |
+| Module ID | Application | File | Status |
 | --- | --- | --- | --- |
-| `sharepoint` | SharePoint | **active (first)** | Challenges + understanding on the surface; culture / relationships / Indigenous understanding underneath |
-| `teams` | Microsoft Teams | planned | Same pattern later |
-| `excel` | Excel | planned | Same pattern later |
-| `copilot` | Microsoft Copilot | planned | Same pattern later |
+| `sharepoint` | SharePoint | `modules/sharepoint.js` | available (default) |
+| `teams` | Microsoft Teams | `modules/teams.js` | available |
+| `excel` | Excel | `modules/excel.js` | available |
+| `outlook` | Outlook | `modules/outlook.js` | available |
+| `onedrive` | OneDrive | `modules/onedrive.js` | available |
+| `copilot` | Microsoft Copilot | `modules/copilot.js` | available |
 
-### Pattern for every goal (structure-critical)
+### Pattern inside every module
 
 ```
-simple surface question
-    → participant answer
-    → AI-crafted clarifying follow-up (based on that answer)
-    → participant clarification
-    → next simple question (or close)
+simple surface question  (module-specific)
+  → participant answer
+  → AI-crafted clarifying follow-up (from that answer)
+  → participant clarification
+  → next simple question
 ```
 
-- Surface questions stay **short and straightforward** (challenge / understanding).
-- Follow-ups are **crafted from the initial answer**, not a fixed second script.
-- Follow-ups still sound like SharePoint (or the current app) talk, while drawing out **culture, relationships, and Indigenous understanding of the situation**.
+**Rule:** add a new Microsoft product by registering a new file under `modules/` — do not fork `app.js`.
 
 ---
 
 ## 3. Core product ideas
 
-Capture ideas here as durable decisions. Mark status: `decided` | `leaning` | `open`.
-
 | ID | Idea | Status | Structural implication |
 | --- | --- | --- | --- |
-| I1 | Access before dialogue — shareable link, then sign-in | decided | Auth/gate is its own surface before dialogue panels |
-| I2 | Email is identity — create or continue profile by email; no password in v1 | decided | Identity module separate from dialogue engine |
-| I3 | Visible people, private answers — roster shows who joined; answers stay per profile | decided | People UI must never load another user’s session body |
-| I4 | Story before scores — narrative over ratings | decided | Prompt design favors open text; avoid score schemas as primary data |
-| I5 | Simple Q + AI clarification pair | decided | Dialogue engine is pair-based (ask → clarify), not a long fixed form |
-| I6 | Indigenous-informed posture — relation, reflective listening, clarify with care | decided | Clarification lens lives in follow-up crafting policy |
-| I7 | Exportable experience maps per person | decided | Export includes person metadata + own session only |
-| I8 | Optional remote AI for follow-up crafting | decided | Local clarifier must work; remote AI is enhancement |
-| I9 | Optional sync for multi-device facilitator tracking | leaning | Sync is side-effect from profile events |
-| I10 | Facilitator access code for people roster | open | May gate `people.html` later |
-| I11 | Auto-submit completed maps | open | Keep manual export either way |
-| I12 | Survey goals by Microsoft app; SharePoint first | decided | Goal config module separate from UI shell |
-| I13 | Surface = challenges/understanding; depth = culture/relationships/Indigenous understanding | decided | Clarifier always receives deep-lens instructions |
+| I1 | Access before dialogue | decided | Auth gate before survey |
+| I2 | Email is identity | decided | `profiles.js` separate from dialogue |
+| I3 | Visible people, private answers | decided | Roster never loads another session body |
+| I4 | Story before scores | decided | Open text, not ratings |
+| I5 | Simple Q + AI clarification pair | decided | Pair-based runner in `app.js` |
+| I6 | Indigenous-informed clarification lens | decided | Policy in `clarify.js` |
+| I7 | Exportable experience maps | decided | Export = person + own session |
+| I8 | Optional remote AI for follow-ups | decided | Local clarifier always works |
+| I9 | Optional sync endpoint | leaning | Side-effect from profile events |
+| I12 | Modular product sections with key initial questions | decided | One registerable module per Microsoft app |
+| I13 | Surface = challenges/understanding; depth = culture/relationships/Indigenous understanding | decided | Clarifier always receives deep lenses |
+| I14 | Cross-user supplemental questions from others’ answers | leaning | Needs shared insight store + AI coordinator (queued) |
+| I15 | Bio/role questions that contextualize later prompts | leaning | Pre-module profile fields feed clarifier context (queued) |
 
 ### Idea inbox
 
-- Multi-goal selector after login (when more than SharePoint exists)
+- Multi-module progress per profile (complete SharePoint, then Teams)
 - —
 
 ---
 
 ## 4. Primary functions
 
-| ID | Function | Responsibility | Owns | Must not |
-| --- | --- | --- | --- | --- |
-| F1 | Access link | Shareable entry URL; copy helper | `index.html`, `people.html` | Bundle with dialogue logic |
-| F2 | Sign in / create profile | Validate email; create or resume | `profiles.js` | Create multiple profiles per email |
-| F3 | Sign out | Clear active identity; keep roster | `profiles.js` | Delete history on sign-out |
-| F4 | Profile isolation | Load/save session only for current email | `profiles.js` | Roster click-through into another session |
-| F5 | People roster | Visible metadata only | `people.html`, `people.js` | Render transcripts |
-| F6 | Access log | create / continue / complete / sign-out | `profiles.js` | Mix with dialogue turns |
-| F7 | Survey goal config | App goal, surface questions, deep lenses | `survey-goals.js` | Own UI rendering |
-| F8 | Clarifying follow-up craft | Build AI follow-up from initial answer + lenses | `clarify.js` (+ optional remote) | Ask unrelated product quizzes |
-| F9 | Dialogue runner | Drive simple Q → answer → clarify → answer loop | `app.js` | Own identity storage |
-| F10 | Experience export | Person + session JSON | `app.js` | Other profiles’ sessions |
-| F11 | Registry export | People + access log | `people.js` | Full transcripts by default |
-| F12 | Sync endpoint (optional) | Push access events | `profiles.js` | Be required for local use |
+| ID | Function | Owns | Must not |
+| --- | --- | --- | --- |
+| F1 | Access link | `index.html` | Bundle with dialogue |
+| F2–F6 | Sign-in, isolation, roster, access log | `profiles.js` / `people.*` | Cross-profile transcripts |
+| F7 | Product module registry | `modules/registry.js` | Own UI chrome |
+| F8 | Module question banks | `modules/*.js` | Clarifier policy |
+| F9 | Clarifying follow-up craft | `clarify.js` | Hard-code per HTML page |
+| F10 | Dialogue runner + module picker | `app.js` | Own identity storage |
+| F11–F12 | Exports + optional sync | `app.js` / `profiles.js` | Leak other profiles |
 
 ---
 
@@ -96,34 +85,35 @@ Capture ideas here as durable decisions. Mark status: `decided` | `leaning` | `o
 
 ```
 ldmlfn/
-  profiles.js        → identity, roster, access log, per-email session
-  survey-goals.js    → Microsoft app goals + simple surface questions (SharePoint first)
-  clarify.js         → craft clarifying follow-ups from an answer (local + optional AI)
-  app.js             → UI shell + runs the Q → clarify loop for the active goal
-  people.js          → facilitator roster / log
-  index.html         → access + sign-in + dialogue shells
-  people.html        → roster surface
+  profiles.js
+  modules/
+    registry.js
+    sharepoint.js
+    teams.js
+    excel.js
+    outlook.js
+    onedrive.js
+    copilot.js
+  clarify.js
+  app.js
+  people.js / people.html
   PROJECT-GUIDANCE.md
-  README.md
 ```
 
 **Rules**
 
-1. Identity separate from dialogue.
-2. Survey goal content separate from clarification crafting.
-3. Continuation only by email sign-in.
-4. Every simple question gets exactly one crafted clarifying follow-up before the next simple question (unless skipped).
-5. Clarifiers dig for culture / relationships / Indigenous understanding while staying framed as app challenge/understanding.
-6. Browser storage is v1 source of truth on GitHub Pages.
+1. Identity ≠ dialogue ≠ product content ≠ clarifier.
+2. New product = new `modules/<id>.js` that calls `LDMLFNModules.register(...)`.
+3. Every simple question gets one crafted clarifying follow-up before the next simple question.
+4. Clarifiers dig for culture / relationships / Indigenous understanding while staying framed as app challenge/understanding.
 
 ---
 
 ## 6. Non-goals (for now)
 
-- Password / SSO authentication
+- Password / SSO
 - Hidden participant lists
 - Cross-profile browsing of answers
-- Multi-app survey picker in the UI (SharePoint is the only active goal)
 - Graded skill assessment
 
 ---
@@ -132,17 +122,14 @@ ldmlfn/
 
 | Date | Decision | Why |
 | --- | --- | --- |
-| 2026-09-21 | Email-only simple login | Low friction; enough to create/continue profiles |
-| 2026-09-21 | Visible people roster | Document who accessed; identities need not be hidden |
-| 2026-09-21 | Isolate sessions by email | Prevent cross-profile answer access |
-| 2026-09-21 | SharePoint as first survey goal | Focus the listening instrument on one Microsoft app |
-| 2026-09-21 | Simple question + AI clarification pair | Straightforward intake with deeper situational understanding |
+| 2026-09-21 | Email-only login + visible roster | Track people without hiding; isolate answers |
+| 2026-09-21 | SharePoint-first listening pattern | Prove simple Q + AI clarify |
+| 2026-09-21 | Modular product sections | Focus key initial questions per Microsoft app without rewriting the runner |
 
 ---
 
 ## 8. How to use this file when coding
 
-1. New feature? Add/update an idea (I#) and function (F#) first.
-2. New Microsoft app goal? Add a goal row in §2 and a config object in `survey-goals.js` — do not fork `app.js`.
-3. Changing clarification depth? Edit `clarify.js` policy / lenses, not individual HTML pages.
-4. If an idea is `open`, do not bake irreversible structure around it.
+1. New Microsoft product? Add `modules/<id>.js` + a row in §2.
+2. Changing clarification depth? Edit `clarify.js`, not every module file.
+3. Cross-module features (bio role, cross-user AI) stay `leaning` until designed here first.
