@@ -66,8 +66,8 @@ const profileData = {
     projects: [
         {
             title: "LDMLFN Microtraining",
-            type: "Product · Experience Capture",
-            desc: "A remote, AI-guided dialogue that captures lived experience with Microsoft products—relational and story-first, with adaptive clarifying questions for microtraining design.",
+            type: "Listening tool · SharePoint pilot",
+            desc: "A GitHub Pages listening survey to hear what people already do with SharePoint, what helps or gets in the way, and how working with others affects their experience — to help shape practical training.",
             href: "ldmlfn/"
         },
         {

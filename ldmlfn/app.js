@@ -659,7 +659,13 @@
     showPanel("auth");
   }
 
-  const accessUrl = new URL(window.location.pathname, window.location.origin).href;
+  const accessUrl = (() => {
+    // Prefer the public GitHub Pages URL when hosted there; otherwise current location.
+    if (window.location.hostname.endsWith("github.io")) {
+      return `${window.location.origin}/ldmlfn/`;
+    }
+    return new URL(".", window.location.href).href;
+  })();
   if (els.accessLinkUrl) els.accessLinkUrl.textContent = accessUrl;
   els.copyAccessLink?.addEventListener("click", async () => {
     try {

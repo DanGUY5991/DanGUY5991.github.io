@@ -1,63 +1,55 @@
-# LDMLFN Microtraining
+# LDMLFN Microtraining — Listening & training-needs tool
 
-Remote, relational experience dialogue for capturing lived experience with Microsoft products.
+One component of **LDMLFN training development**. Plain **HTML + CSS + JavaScript** — no build step — so it can be hosted on **GitHub Pages**.
 
-## Access link
+**Pilot focus:** SharePoint (strengths-first questions, optional follow-ups, participant-approved draft summaries).
 
-Share: `/ldmlfn/` (or `ldmlfn/index.html` on the site).
+See:
+- [`UNDERSTANDING.md`](./UNDERSTANDING.md) — project understanding for review
+- [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — structure decisions
 
-Participants:
+## Host on GitHub Pages
 
-1. Open the access link
-2. Sign in with **email** (+ optional display name)
-3. **Create** a profile on first visit, or **continue** with the same email later
-4. Complete their own dialogue only
+This repo is already a GitHub Pages site (`DanGUY5991.github.io`), published from the **`main`** branch.
 
-## People & tracking
+| Item | Value |
+| --- | --- |
+| Live survey URL (after merge to `main`) | https://danguy5991.github.io/ldmlfn/ |
+| Local folder | `F:\DanGUY5991.github.io\ldmlfn` (or `/ldmlfn` in the repo) |
+| Stack | Static HTML / CSS / JS only |
+| Build / deploy command | None — push HTML to `main` |
 
-Open `/ldmlfn/people.html` for a **visible roster** of who has signed in (name, email, status, visits, last access) plus an access log.
+### Publish steps
 
-- People are **not hidden**
-- Dialogue answers are **not shared across profiles**
-- Continuing someone else’s dialogue requires signing in with **their email**
+1. Merge the feature branch into `main` (or copy/update `ldmlfn/` on `main`).
+2. Wait for Pages to rebuild (usually under a minute).
+3. Open https://danguy5991.github.io/ldmlfn/
+4. Share that link as the participant access link.
 
-## What it is
+### Why this works for a survey
 
-A SharePoint-first listening survey (more Microsoft app goals later) that:
+- No server, database, or Node build required  
+- Relative paths (`styles.css`, `app.js`, `modules/…`) work under `/ldmlfn/`  
+- Answers stay in the participant’s browser (`localStorage`) unless you later add an approved share/export path  
 
-- Asks **simple, straightforward** questions about SharePoint challenges and understanding
-- Crafts **one AI follow-up per answer** to clarify culture, relationships, and Indigenous understanding of the situation
-- Keeps answers in an email-based profile (create or continue)
-- Lets participants export an experience map as JSON
-
-## Principles
-
-1. **Surface vs depth** — feels like a SharePoint challenge/understanding survey; captures culture and relationships underneath
-2. **Simple Q → crafted clarify** — every initial answer gets one follow-up built from that answer
-3. **Relation before extraction** — clarify with care; no skill scores
-4. **Visible people, private answers** — roster shows who joined; dialogues stay isolated by email
-
-See also:
-- [`UNDERSTANDING.md`](./UNDERSTANDING.md) — current project understanding for review
-- [`PROJECT-GUIDANCE.md`](./PROJECT-GUIDANCE.md) — high-level ideas & functions that guide code structure
-
-
-## Run locally
+### Local check before push
 
 ```bash
 npx serve .
-# then open http://localhost:3000/ldmlfn/
+# open http://localhost:3000/ldmlfn/
 ```
 
-## Optional endpoints
+Or on Windows, open `ldmlfn\index.html` in a browser (some browsers restrict modules/`localStorage` quirks with `file://` — a local static server is more reliable).
 
-```js
-LDMLFN.setAiEndpoint("https://your-api.example.com/ldmlfn");
-LDMLFN.setSyncEndpoint("https://your-api.example.com/ldmlfn-sync");
-```
+## Pilot principles
 
-Clear with `null`.
+1. Transparent purpose — software and work relationships when relevant  
+2. Strengths and useful work first  
+3. Optional follow-ups — Skip / Continue / Correct  
+4. Editable draft summary — not an assessment  
+5. Cross-person coordination off until approved  
+6. Clear notice of who can see what and where data lives  
 
-## Privacy note
+## Note on identity
 
-v1 stores profiles in the participant browser’s `localStorage` registry. For multi-device facilitator dashboards, configure a sync endpoint. The people page never exposes another user’s transcript.
+Email sign-in is a convenience to return to a draft on that browser. It is **not** secure authentication.
