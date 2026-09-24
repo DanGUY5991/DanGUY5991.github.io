@@ -1,0 +1,837 @@
+/**
+ * LDMLFN Microtraining — dialogue runner
+ * Product modules (SharePoint, Teams, Excel, …): simple surface question →
+ * answer → AI-crafted clarifying follow-up → next question.
+ */
+
+(() => {
+  const Profiles = window.LDMLFNProfiles;
+  const Modules = window.LDMLFNModules;
+  const Goals = window.LDMLFNSurveyGoals;
+  const Clarify = window.LDMLFNClarify;
+
+  // Pilot: cross-person coordinated questions stay off until consent design is approved.
+  const CROSS_PERSON_SUPPLEMENTAL = false;
+
+  const els = {
+    auth: document.getElementById("panel-auth"),
+    landing: document.getElementById("panel-landing"),
+    bio: document.getElementById("panel-bio"),
+    dialogue: document.getElementById("panel-dialogue"),
+    close: document.getElementById("panel-close"),
+    authForm: document.getElementById("auth-form"),
+    authEmail: document.getElementById("auth-email"),
+    authName: document.getElementById("auth-name"),
+    authStatus: document.getElementById("auth-status"),
+    bioForm: document.getElementById("bio-form"),
+    bioRole: document.getElementById("bio-role"),
+    bioRelationships: document.getElementById("bio-relationships"),
+    bioOrg: document.getElementById("bio-org"),
+    bioStatus: document.getElementById("bio-status"),
+    bioBack: document.getElementById("bio-back"),
+    bioSubmit: document.getElementById("bio-submit"),
+    accessLinkUrl: document.getElementById("access-link-url"),
+    copyAccessLink: document.getElementById("copy-access-link"),
+    copyLinkStatus: document.getElementById("copy-link-status"),
+    userChip: document.getElementById("user-chip"),
+    signout: document.getElementById("signout-btn"),
+    begin: document.getElementById("begin-btn"),
+    resume: document.getElementById("resume-btn"),
+    editBio: document.getElementById("edit-bio-btn"),
+    restart: document.getElementById("restart-btn"),
+    again: document.getElementById("again-btn"),
+    thread: document.getElementById("thread"),
+    form: document.getElementById("reply-form"),
+    input: document.getElementById("reply-input"),
+    hint: document.getElementById("hint-text"),
+    skip: document.getElementById("skip-btn"),
+    send: document.getElementById("send-btn"),
+    progress: document.getElementById("progress-bar"),
+    stage: document.getElementById("stage-label"),
+    portrait: document.getElementById("experience-portrait"),
+    exportBtn: document.getElementById("export-btn"),
+    copyBtn: document.getElementById("copy-btn"),
+    copyStatus: document.getElementById("copy-status"),
+    closeSummary: document.getElementById("close-summary"),
+    landingTitle: document.getElementById("landing-title"),
+    landingLede: document.getElementById("landing-lede"),
+    landingEyebrow: document.getElementById("landing-eyebrow"),
+    modulePicker: document.getElementById("module-picker"),
+  };
+
+  function goal() {
+    return Modules.getSelected() || Goals.getActiveGoal();
+  }
+
+  let session = createSession();
+  let busy = false;
+
+  function createSession() {
+    const g = goal();
+    return {
+      id: `ldmlfn-${Date.now().toString(36)}`,
+      startedAt: new Date().toISOString(),
+      goalId: g.id,
+      application: g.application,
+      stage: "intro",
+      /** @type {"surface"|"clarify"|"closing"} */
+      phase: "surface",
+      questionIndex: 0,
+      pendingQuestionId: null,
+      turns: [],
+      pairs: [],
+      currentPair: null,
+      closingAnswer: "",
+      supplementalAsked: false,
+      supplemental: null,
+    };
+  }
+
+  function requireProfile() {
+    return Profiles?.isSignedIn() ? Profiles.getCurrent() : null;
+  }
+
+  function save() {
+    if (!requireProfile()) return;
+    Profiles.saveSession(session).catch(() => {
+      /* ignore transient encrypt failures */
+    });
+  }
+
+  async function load() {
+    if (!requireProfile()) return null;
+    return Profiles.loadSession();
+  }
+
+  function clearSaved() {
+    if (!requireProfile()) return;
+    Profiles.clearSession();
+  }
+
+  function showPanel(name) {
+    els.auth.hidden = name !== "auth";
+    els.landing.hidden = name !== "landing";
+    if (els.bio) els.bio.hidden = name !== "bio";
+    els.dialogue.hidden = name !== "dialogue";
+    els.close.hidden = name !== "close";
+    els.restart.hidden = !(name === "dialogue" || name === "close");
+  }
+
+  function personContext() {
+    return Profiles.getCurrentPublic();
+  }
+
+  function fillBioForm() {
+    const bio = Profiles.getBio();
+    if (!els.bioRole) return;
+    els.bioRole.value = bio?.role || "";
+    els.bioRelationships.value = bio?.relationships || "";
+    els.bioOrg.value = bio?.orgContext || "";
+    els.bioStatus.textContent = "";
+  }
+
+  function showBioThenStart() {
+    fillBioForm();
+    showPanel("bio");
+  }
+
+  function refreshUserChrome() {
+    const person = Profiles.getCurrentPublic();
+    if (!person) {
+      els.userChip.hidden = true;
+      els.signout.hidden = true;
+      els.userChip.textContent = "";
+      return;
+    }
+    els.userChip.hidden = false;
+    els.signout.hidden = false;
+    els.userChip.textContent = `${person.name} · ${person.email}`;
+  }
+
+  function renderModulePicker() {
+    if (!els.modulePicker) return;
+    const selectedId = Modules.getSelectedId();
+    els.modulePicker.innerHTML = Modules.list()
+      .map((mod) => {
+        const selected = mod.id === selectedId;
+        const count = mod.questions?.length || 0;
+        return `
+          <button type="button" class="module-card${selected ? " is-selected" : ""}"
+            role="option" aria-selected="${selected}" data-module-id="${mod.id}">
+            <span class="module-card__name">${escapeHtml(mod.application)}</span>
+            <span class="module-card__blurb">${escapeHtml(mod.blurb || "")}</span>
+            <span class="module-card__meta">${count} key questions</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    els.modulePicker.querySelectorAll("[data-module-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        Modules.setSelected(btn.getAttribute("data-module-id"));
+        refreshLandingCopy();
+        renderModulePicker();
+      });
+    });
+  }
+
+  function refreshLandingCopy() {
+    const g = goal();
+    const person = Profiles.getCurrent();
+    if (els.landingEyebrow) {
+      els.landingEyebrow.textContent = `${g.application} · product module`;
+    }
+    if (person && els.landingLede) {
+      els.landingLede.textContent = `Selected module: ${g.application}. ${g.blurb || ""} Simple questions first; one clarifying follow-up after each answer.`;
+    }
+    if (els.begin) {
+      els.begin.textContent = `Begin ${g.application} module`;
+    }
+  }
+
+  async function enterAppShell(result) {
+    refreshUserChrome();
+
+    const person = Profiles.getCurrent();
+    const saved = await load();
+
+    // If a saved session belongs to a module, keep that module selected for resume.
+    if (saved?.goalId && Modules.get(saved.goalId)) {
+      Modules.setSelected(saved.goalId);
+    }
+
+    els.landingTitle.textContent = result?.isNew
+      ? `Welcome, ${person.name}`
+      : `Welcome back, ${person.name}`;
+
+    renderModulePicker();
+    refreshLandingCopy();
+
+    if (saved && saved.stage === "close" && saved.turns?.length) {
+      session = saved;
+      renderPortrait();
+      showPanel("close");
+      setProgress();
+      return;
+    }
+
+    if (saved && saved.stage !== "close" && saved.turns?.length) {
+      els.resume.hidden = false;
+      els.resume.textContent = `Continue saved ${saved.application || "survey"}`;
+      showPanel("landing");
+      return;
+    }
+
+    els.resume.hidden = true;
+    showPanel("landing");
+  }
+
+  function setProgress() {
+    const total = goal().questions.length * 2 + 2; // surface+clarify pairs + intro/close weight
+    let done = 0;
+    if (session.stage === "intro") done = 0;
+    else if (session.stage === "questions") {
+      done = session.questionIndex * 2 + (session.phase === "clarify" ? 1 : 0) + 1;
+    } else if (session.stage === "closing") done = total - 1;
+    else done = total;
+
+    const pct = Math.min(100, Math.round((done / total) * 100));
+    els.progress.style.width = `${pct}%`;
+
+    if (session.phase === "clarify") els.stage.textContent = "Clarifying";
+    else if (session.phase === "supplemental") els.stage.textContent = "Across experiences";
+    else if (session.stage === "closing") els.stage.textContent = "Closing";
+    else if (session.stage === "close") els.stage.textContent = "Complete";
+    else els.stage.textContent = `${goal().application} · Question ${Math.min(session.questionIndex + 1, goal().questions.length)}`;
+  }
+
+  function addBubble(role, text, kind = "") {
+    const turn = {
+      role,
+      text,
+      kind,
+      at: new Date().toISOString(),
+      phase: session.phase,
+      questionId: session.pendingQuestionId,
+    };
+    session.turns.push(turn);
+    renderBubble(turn);
+    save();
+  }
+
+  function renderBubble(turn) {
+    const div = document.createElement("div");
+    div.className = `bubble bubble--${turn.role}${turn.kind === "reflect" ? " reflect" : ""}${turn.kind === "clarify" ? " clarify" : ""}${turn.kind === "supplemental" ? " supplemental" : ""}`;
+    const who = document.createElement("span");
+    who.className = "bubble__who";
+    who.textContent = turn.role === "guide" ? "LDMLFN guide" : "You";
+    const p = document.createElement("p");
+    p.textContent = turn.text;
+    div.append(who, p);
+    els.thread.appendChild(div);
+    div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function restoreThread() {
+    els.thread.innerHTML = "";
+    session.turns.forEach(renderBubble);
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function currentQuestion() {
+    return goal().questions[session.questionIndex] || null;
+  }
+
+  function contributeInsight(answer, questionId, kind) {
+    if (!CROSS_PERSON_SUPPLEMENTAL) return;
+    const Insights = window.LDMLFNInsights;
+    if (!Insights || !answer) return;
+    const themes = Clarify.detectThemes(answer);
+    Insights.contribute({
+      moduleId: goal().id,
+      application: goal().application,
+      questionId,
+      answer,
+      themes,
+      person: Profiles.getCurrentPublic(),
+      kind,
+    });
+  }
+
+  function collectedThemes() {
+    const themes = [];
+    session.pairs.forEach((pair) => {
+      (pair.clarification?.themes || []).forEach((t) => themes.push(t));
+      Clarify.detectThemes(pair.surfaceAnswer || "").forEach((t) => themes.push(t));
+      Clarify.detectThemes(pair.clarifyAnswer || "").forEach((t) => themes.push(t));
+    });
+    return [...new Set(themes)];
+  }
+
+  async function askSurfaceQuestion() {
+    const q = currentQuestion();
+    if (!q) {
+      await maybeAskSupplementalThenClose();
+      return;
+    }
+    session.stage = "questions";
+    session.phase = "surface";
+    session.pendingQuestionId = q.id;
+    session.currentPair = {
+      questionId: q.id,
+      surface: q.surface,
+      surfaceAnswer: "",
+      clarification: null,
+      clarifyAnswer: "",
+    };
+    addBubble("guide", frameSurfaceQuestion(q));
+    els.hint.textContent = q.hint || "A straightforward answer is enough.";
+    els.skip.hidden = true;
+    setProgress();
+    save();
+  }
+
+  function frameSurfaceQuestion(q) {
+    const person = personContext();
+    const role = person?.role;
+    const rel = person?.relationships;
+    if (!role) return q.surface;
+    const preface = rel
+      ? `From your role as ${role} (working with ${rel}):`
+      : `From your role as ${role}:`;
+    return `${preface}\n\n${q.surface}`;
+  }
+
+  async function askClarification(answer) {
+    const q = currentQuestion();
+    session.phase = "clarify";
+    setProgress();
+    contributeInsight(answer, q?.id, "surface");
+
+    const thinking = document.createElement("div");
+    thinking.className = "bubble bubble--guide";
+    thinking.innerHTML = '<span class="bubble__who">LDMLFN guide</span><p class="typing">Crafting a follow-up</p>';
+    els.thread.appendChild(thinking);
+
+    const crafted = await Clarify.craftFollowUp({
+      goal: goal(),
+      question: q,
+      answer,
+      person: personContext(),
+    });
+
+    thinking.remove();
+
+    if (crafted.reflection) {
+      addBubble("guide", crafted.reflection, "reflect");
+      await wait(400);
+    }
+
+    addBubble("guide", crafted.prompt, "clarify");
+    if (session.currentPair) {
+      session.currentPair.clarification = crafted;
+    }
+    els.hint.textContent = crafted.hint || "Add whatever clarifies the situation.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
+  }
+
+  async function maybeAskSupplementalThenClose() {
+    if (!CROSS_PERSON_SUPPLEMENTAL || session.supplementalAsked) {
+      session.supplementalAsked = true;
+      await askClosing();
+      return;
+    }
+
+    const thinking = document.createElement("div");
+    thinking.className = "bubble bubble--guide";
+    thinking.innerHTML = '<span class="bubble__who">LDMLFN guide</span><p class="typing">Listening across experiences</p>';
+    els.thread.appendChild(thinking);
+
+    const crafted = await Clarify.craftSupplemental({
+      goal: goal(),
+      person: personContext(),
+      personThemes: collectedThemes(),
+    });
+
+    thinking.remove();
+
+    if (!crafted) {
+      session.supplementalAsked = true;
+      await askClosing();
+      return;
+    }
+
+    session.supplementalAsked = true;
+    session.stage = "questions";
+    session.phase = "supplemental";
+    session.pendingQuestionId = "peer-supplemental";
+    session.supplemental = {
+      prompt: crafted.prompt,
+      reflection: crafted.reflection,
+      peerInsightIds: crafted.peerInsightIds || [],
+      answer: "",
+    };
+
+    if (crafted.reflection) {
+      addBubble("guide", crafted.reflection, "reflect");
+      await wait(400);
+    }
+    addBubble("guide", crafted.prompt, "supplemental");
+    els.hint.textContent = crafted.hint || "Relate this to your own experience — echo, differ, or add what’s missing.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
+  }
+
+  async function askClosing() {
+    session.stage = "closing";
+    session.phase = "surface";
+    session.pendingQuestionId = "closing";
+    addBubble("guide", goal().closingPrompt);
+    els.hint.textContent = "Optional — share anything else that matters.";
+    els.skip.hidden = false;
+    setProgress();
+    save();
+  }
+
+  async function startDialogue(resume = false) {
+    if (!requireProfile()) {
+      showPanel("auth");
+      return;
+    }
+    showPanel("dialogue");
+    setProgress();
+    els.input.value = "";
+    els.input.focus();
+
+    if (!resume) {
+      els.thread.innerHTML = "";
+      const person = Profiles.getCurrent();
+      const pub = personContext();
+      session = createSession();
+      const roleLine = pub?.role
+        ? ` We’ll keep your role as ${pub.role}${pub.relationships ? `, in relationship with ${pub.relationships}` : ""} in view as we ask about ${goal().application}.`
+        : "";
+      addBubble(
+        "guide",
+        `Welcome, ${person.name}. ${goal().intro}${roleLine}`
+      );
+      await wait(400);
+      await askSurfaceQuestion();
+    } else {
+      restoreThread();
+      els.hint.textContent =
+        session.phase === "clarify" || session.phase === "supplemental"
+          ? "Add whatever clarifies the situation."
+          : "A straightforward answer is enough.";
+      els.skip.hidden = !(
+        session.phase === "clarify" ||
+        session.phase === "supplemental" ||
+        session.stage === "closing"
+      );
+      setProgress();
+    }
+  }
+
+  async function handleReply(text, skipped = false) {
+    if (busy || !requireProfile()) return;
+    const cleaned = text.trim();
+    if (!cleaned && !skipped) return;
+
+    busy = true;
+    els.send.disabled = true;
+    els.skip.disabled = true;
+
+    if (!skipped) addBubble("you", cleaned);
+    else addBubble("you", "(passing on this follow-up for now)");
+
+    els.input.value = "";
+
+    try {
+      if (session.stage === "closing") {
+        session.closingAnswer = skipped ? "" : cleaned;
+        finishSession();
+      } else if (session.phase === "supplemental") {
+        if (session.supplemental) {
+          session.supplemental.answer = skipped ? "" : cleaned;
+        }
+        if (!skipped) contributeInsight(cleaned, "peer-supplemental", "supplemental");
+        await askClosing();
+      } else if (session.phase === "surface") {
+        if (session.currentPair) session.currentPair.surfaceAnswer = cleaned;
+        await askClarification(cleaned);
+      } else if (session.phase === "clarify") {
+        if (session.currentPair) {
+          session.currentPair.clarifyAnswer = skipped ? "" : cleaned;
+          session.pairs.push(session.currentPair);
+          session.currentPair = null;
+        }
+        if (!skipped) contributeInsight(cleaned, session.pendingQuestionId, "clarify");
+        session.questionIndex += 1;
+        if (session.questionIndex >= goal().questions.length) {
+          await maybeAskSupplementalThenClose();
+        } else {
+          await askSurfaceQuestion();
+        }
+      }
+    } finally {
+      busy = false;
+      els.send.disabled = false;
+      els.skip.disabled = false;
+      els.input.focus();
+    }
+  }
+
+  function finishSession() {
+    session.stage = "close";
+    session.phase = "surface";
+    setProgress();
+    save();
+    Profiles.markComplete();
+    renderPortrait();
+    showPanel("close");
+    els.closeSummary.textContent = `Your ${goal().application} draft summary is ready. Review it below — you can treat this as a draft of your answers, not an assessment.`;
+  }
+
+  function renderPortrait() {
+    const person = Profiles.getCurrentPublic();
+    const pairsHtml = session.pairs
+      .map((pair) => {
+        const q = goal().questions.find((item) => item.id === pair.questionId);
+        return `
+          <h4>${escapeHtml(q?.surface || pair.questionId)}</h4>
+          <p><strong>Answer:</strong> ${escapeHtml(truncate(pair.surfaceAnswer || "—", 280))}</p>
+          <p><strong>Clarification asked:</strong> ${escapeHtml(truncate(pair.clarification?.prompt || "—", 220))}</p>
+          <p><strong>Clarified:</strong> ${escapeHtml(truncate(pair.clarifyAnswer || "—", 280))}</p>
+        `;
+      })
+      .join("");
+
+    const supplementalHtml = session.supplemental
+      ? `<h4>Across experiences</h4>
+         <p><strong>Coordinated question:</strong> ${escapeHtml(truncate(session.supplemental.prompt || "—", 260))}</p>
+         <p><strong>Your response:</strong> ${escapeHtml(truncate(session.supplemental.answer || "—", 280))}</p>`
+      : "";
+
+    els.portrait.innerHTML = `
+      <h3>${escapeHtml(goal().application)} experience portrait</h3>
+      <h4>Profile</h4>
+      <p>${escapeHtml(person?.name || "—")} · ${escapeHtml(person?.email || "—")}</p>
+      <h4>Role &amp; relationships</h4>
+      <p>${escapeHtml(person?.role || "—")}</p>
+      <p>${escapeHtml(person?.relationships || "—")}</p>
+      ${person?.orgContext ? `<p>${escapeHtml(person.orgContext)}</p>` : ""}
+      <h4>Survey goal</h4>
+      <p>${escapeHtml(goal().surfaceFrame)}</p>
+      ${pairsHtml || "<p>No completed question pairs yet.</p>"}
+      ${supplementalHtml}
+      <h4>Closing note</h4>
+      <p>${escapeHtml(session.closingAnswer || "—")}</p>
+    `;
+  }
+
+  function truncate(str, n) {
+    const s = String(str || "").trim();
+    return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function buildExport() {
+    return {
+      project: "LDMLFN Microtraining",
+      surveyGoal: {
+        id: goal().id,
+        application: goal().application,
+        surfaceFrame: goal().surfaceFrame,
+        deepLenses: goal().deepLenses,
+      },
+      exportedAt: new Date().toISOString(),
+      person: Profiles.getCurrentPublic(),
+      sessionId: session.id,
+      startedAt: session.startedAt,
+      pairs: session.pairs,
+      supplemental: session.supplemental,
+      closingAnswer: session.closingAnswer,
+      transcript: session.turns,
+    };
+  }
+
+  function downloadExport() {
+    const payload = buildExport();
+    const person = Profiles.getCurrentPublic();
+    const slug = (person?.email || "participant").replace(/[^a-z0-9]+/gi, "-");
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ldmlfn-${goal().id}-${slug}-${session.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copySummary() {
+    const person = Profiles.getCurrentPublic();
+    const lines = [
+      `LDMLFN Microtraining — ${goal().application} summary`,
+      `Person: ${person?.name || "—"} <${person?.email || "—"}>`,
+      "",
+      ...session.pairs.map((pair, i) => {
+        const q = goal().questions.find((item) => item.id === pair.questionId);
+        return [
+          `Q${i + 1}: ${q?.surface || pair.questionId}`,
+          `A: ${pair.surfaceAnswer || "—"}`,
+          `Follow-up: ${pair.clarification?.prompt || "—"}`,
+          `Clarified: ${pair.clarifyAnswer || "—"}`,
+          "",
+        ].join("\n");
+      }),
+      `Closing: ${session.closingAnswer || "—"}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      els.copyStatus.textContent = "Summary copied to clipboard.";
+    } catch (_) {
+      els.copyStatus.textContent = "Could not copy automatically — use Download instead.";
+    }
+  }
+
+  function resetDialogueOnly() {
+    Profiles.clearSession();
+    session = createSession();
+    els.thread.innerHTML = "";
+    els.copyStatus.textContent = "";
+    els.resume.hidden = true;
+    showPanel("landing");
+  }
+
+  function signOutToAuth() {
+    Profiles.signOut();
+    session = createSession();
+    els.thread.innerHTML = "";
+    refreshUserChrome();
+    showPanel("auth");
+  }
+
+  const accessUrl = (() => {
+    // Prefer the public GitHub Pages URL when hosted there; otherwise current location.
+    if (window.location.hostname.endsWith("github.io")) {
+      return `${window.location.origin}/ldmlfn/`;
+    }
+    return new URL(".", window.location.href).href;
+  })();
+  if (els.accessLinkUrl) els.accessLinkUrl.textContent = accessUrl;
+  els.copyAccessLink?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(accessUrl);
+      els.copyLinkStatus.textContent = "Access link copied.";
+    } catch (_) {
+      els.copyLinkStatus.textContent = "Could not copy — select the link manually.";
+    }
+  });
+
+  let authMode = "login";
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const isRegister = mode === "register";
+    document.getElementById("tab-login")?.classList.toggle("is-active", !isRegister);
+    document.getElementById("tab-register")?.classList.toggle("is-active", isRegister);
+    document.getElementById("tab-login")?.setAttribute("aria-selected", String(!isRegister));
+    document.getElementById("tab-register")?.setAttribute("aria-selected", String(isRegister));
+    const title = document.getElementById("auth-card-title");
+    const hint = document.getElementById("auth-card-hint");
+    const nameField = document.getElementById("auth-name-field");
+    const confirmField = document.getElementById("auth-confirm-field");
+    const submit = document.getElementById("auth-submit");
+    const password = document.getElementById("auth-password");
+    if (title) title.textContent = isRegister ? "Create account" : "Sign in";
+    if (hint) {
+      hint.textContent = isRegister
+        ? "Choose an email and password. Only you can open this account’s answers."
+        : "Use your email and password to open your own answers only.";
+    }
+    if (nameField) nameField.hidden = !isRegister;
+    if (confirmField) confirmField.hidden = !isRegister;
+    if (submit) submit.textContent = isRegister ? "Create account" : "Sign in";
+    if (password) password.autocomplete = isRegister ? "new-password" : "current-password";
+    if (els.authStatus) els.authStatus.textContent = "";
+  }
+
+  document.getElementById("tab-login")?.addEventListener("click", () => setAuthMode("login"));
+  document.getElementById("tab-register")?.addEventListener("click", () => setAuthMode("register"));
+
+  els.authForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    els.authStatus.textContent = "";
+    const email = els.authEmail.value;
+    const password = document.getElementById("auth-password")?.value || "";
+    const confirm = document.getElementById("auth-password-confirm")?.value || "";
+    const name = els.authName?.value || "";
+    const submitBtn = document.getElementById("auth-submit");
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      let result;
+      if (authMode === "register") {
+        if (password !== confirm) throw new Error("Passwords do not match.");
+        result = await Profiles.register({ email, name, password });
+        els.authStatus.textContent = "Account created. You’re signed in.";
+      } else {
+        result = await Profiles.login({ email, password });
+        els.authStatus.textContent = "Signed in — opening your account only.";
+      }
+      await enterAppShell(result);
+    } catch (err) {
+      els.authStatus.textContent = err.message || "Could not sign in.";
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  els.signout?.addEventListener("click", signOutToAuth);
+
+  els.begin.addEventListener("click", async () => {
+    if (!requireProfile()) {
+      showPanel("auth");
+      return;
+    }
+    await Profiles.clearSession();
+    if (!Profiles.hasBio()) {
+      showBioThenStart();
+      return;
+    }
+    startDialogue(false);
+  });
+
+  els.bioForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    els.bioStatus.textContent = "";
+    try {
+      Profiles.updateBio({
+        role: els.bioRole.value,
+        relationships: els.bioRelationships.value,
+        orgContext: els.bioOrg.value,
+      });
+      els.bioStatus.textContent = "Role saved — continuing into the module.";
+      startDialogue(false);
+    } catch (err) {
+      els.bioStatus.textContent = err.message || "Could not save bio.";
+    }
+  });
+
+  els.bioBack?.addEventListener("click", () => {
+    showPanel("landing");
+  });
+
+  els.editBio?.addEventListener("click", showBioThenStart);
+  window.LDMLFNEditBio = showBioThenStart;
+
+  els.resume?.addEventListener("click", async () => {
+    const saved = await load();
+    if (!saved) return;
+    if (saved.goalId && Modules.get(saved.goalId)) {
+      Modules.setSelected(saved.goalId);
+    }
+    session = saved;
+    startDialogue(true);
+  });
+
+  els.restart.addEventListener("click", resetDialogueOnly);
+  els.again?.addEventListener("click", resetDialogueOnly);
+
+  els.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    handleReply(els.input.value, false);
+  });
+
+  els.skip.addEventListener("click", () => handleReply("", true));
+  els.exportBtn.addEventListener("click", downloadExport);
+  els.copyBtn.addEventListener("click", copySummary);
+
+  els.input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      els.form.requestSubmit();
+    }
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("signout")) Profiles.signOut();
+  if (params.has("fresh") || params.has("clear") || params.has("signout")) {
+    if (window.history.replaceState) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }
+
+  // Password auth keeps the key in memory only — always start at sign-in after refresh.
+  refreshUserChrome();
+  showPanel("auth");
+  setAuthMode("login");
+
+  window.LDMLFN = {
+    setAiEndpoint(url) {
+      return Profiles.setAiEndpoint(url);
+    },
+    setFacilitatorSecret: (s) => Profiles.setFacilitatorSecret(s),
+    unlockFacilitator: (s) => Profiles.verifyFacilitatorSecret(s),
+    adminResetPassword: (email, pw, secret) => Profiles.adminResetPassword(email, pw, secret),
+    setSyncEndpoint: (...args) => Profiles.setSyncEndpoint(...args),
+    exportSession: buildExport,
+    listPeople: () => Profiles.listPeople(),
+    activeGoal: () => goal(),
+    listModules: () => Modules.list(),
+    setModule: (id) => Modules.setSelected(id),
+    exportInsights: () => window.LDMLFNInsights?.exportPool(),
+  };
+})();

@@ -65,6 +65,12 @@ const profileData = {
     ],
     projects: [
         {
+            title: "LDMLFN Microtraining",
+            type: "Listening tool · SharePoint pilot",
+            desc: "A welcome page and SharePoint listening survey to hear what already works, what gets in the way, and what people want to do more easily — to help shape practical training.",
+            href: "ldmlfn/"
+        },
+        {
             title: "Case Example: Strategic Alignment",
             type: "Consulting",
             desc: "A mid-sized service organization was struggling to align its strategic goals with day-to-day work. I supported leadership in mapping decision pathways, identifying hidden tensions, and designing clearer policy language."
