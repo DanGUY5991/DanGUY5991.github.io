@@ -30,6 +30,7 @@
   let liveRaf = 0;
   let playbackRaf = 0;
   let isRecording = false;
+  let isStartingRecord = false;
 
   function ensureAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -417,6 +418,7 @@
   }
 
   async function startRecording() {
+    if (isRecording || isStartingRecord) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("This browser cannot use the microphone.", "is-error");
       return;
@@ -426,7 +428,10 @@
       return;
     }
 
+    isStartingRecord = true;
+    recordBtn.disabled = true;
     clearAdvice();
+    setStatus("Requesting microphone…");
 
     try {
       await ensureAudioCtx();
@@ -434,6 +439,8 @@
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
     } catch (err) {
+      isStartingRecord = false;
+      recordBtn.disabled = false;
       const denied = err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError";
       setStatus(
         denied
@@ -492,7 +499,9 @@
     };
 
     mediaRecorder.start();
+    isStartingRecord = false;
     isRecording = true;
+    recordBtn.disabled = false;
     recordBtn.classList.add("is-recording");
     recordBtn.textContent = "Recording…";
     stopBtn.hidden = false;
@@ -506,6 +515,7 @@
   }
 
   recordBtn.addEventListener("click", () => {
+    if (isStartingRecord) return;
     if (isRecording) stopRecording();
     else startRecording();
   });

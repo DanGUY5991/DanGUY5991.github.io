@@ -172,6 +172,11 @@ body {
   outline-offset: 3px;
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .btn-primary {
   background: linear-gradient(180deg, var(--accent-bright), var(--accent));
   color: #1a1408;
