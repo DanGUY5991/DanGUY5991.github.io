@@ -1,0 +1,33 @@
+{
+  "name": "Blackfoot Sounds — Aa (Yes)",
+  "short_name": "Aa · Yes",
+  "description": "Play the Blackfoot sample Aa (Yes), record your try, compare waves, and get advice for the next attempt.",
+  "id": "/blackfoot-sounds/",
+  "start_url": "/blackfoot-sounds/",
+  "scope": "/blackfoot-sounds/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a1612",
+  "theme_color": "#0a1612",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

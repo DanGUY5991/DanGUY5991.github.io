@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a1612" />
+    <meta name="description" content="Play Blackfoot Aa (Yes), record your try, compare waves, and get advice." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Aa · Yes" />
+    <title>Aa — Yes · Blackfoot Sounds</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <main class="page">
+      <header class="hero">
+        <p class="brand">Blackfoot Sounds</p>
+        <p class="match-label">Say this word</p>
+        <h1 class="word">Aa</h1>
+        <p class="gloss">English: <strong>Yes</strong></p>
+      </header>
+
+      <ol class="flow">
+        <li class="flow-step">
+          <span class="flow-num">1</span>
+          <div>
+            <h2>Play sample</h2>
+            <p>Listen to the Blackfoot recording of <strong>Aa</strong>.</p>
+            <button type="button" class="btn btn-primary" id="play-sample">
+              Play sample
+            </button>
+            <audio id="sample-audio" src="assets/aa-yes.mp3" preload="auto"></audio>
+          </div>
+        </li>
+
+        <li class="flow-step">
+          <span class="flow-num">2</span>
+          <div>
+            <h2>Record your try</h2>
+            <p>Turn on the mic and say <strong>Aa</strong>.</p>
+            <div class="btn-row">
+              <button type="button" class="btn btn-mic" id="record-btn">
+                Record
+              </button>
+              <button type="button" class="btn btn-ghost" id="stop-btn" hidden>
+                Stop
+              </button>
+            </div>
+            <p class="status" id="mic-status" role="status"></p>
+          </div>
+        </li>
+
+        <li class="flow-step">
+          <span class="flow-num">3</span>
+          <div>
+            <h2>Compare waves</h2>
+            <p>Sample on the left, your voice on the right.</p>
+          </div>
+        </li>
+
+        <li class="flow-step">
+          <span class="flow-num">4</span>
+          <div>
+            <h2>Advice for next try</h2>
+            <p>Short tips from timing, loudness, and length.</p>
+          </div>
+        </li>
+      </ol>
+
+      <section class="compare" aria-label="Waveform comparison">
+        <div class="panel">
+          <div class="panel-label">
+            <h2>Sample · Aa</h2>
+            <span class="hint" id="sample-hint">Loading…</span>
+          </div>
+          <div class="wave-stage" id="sample-stage">
+            <canvas id="sample-wave" width="800" height="200" aria-label="Sample waveform"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">
+            <h2>Your voice</h2>
+            <span class="hint" id="live-hint">Waiting</span>
+          </div>
+          <div class="wave-stage" id="live-stage">
+            <canvas id="live-wave" width="800" height="200" aria-label="Your voice waveform"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="advice" id="advice" aria-label="Advice for next try" hidden>
+        <div class="advice-head">
+          <h2>Advice for next try</h2>
+          <p class="advice-summary" id="advice-summary"></p>
+        </div>
+        <ul class="advice-list" id="advice-list"></ul>
+        <p class="advice-meta" id="advice-meta"></p>
+      </section>
+
+      <section class="share" aria-label="Open on your phone">
+        <div class="share-copy">
+          <h2>Open on your phone</h2>
+          <p>
+            Scan this QR for the live HTTPS page (mic + installable PWA).
+          </p>
+          <p class="share-url">
+            <a
+              id="pages-url"
+              href="https://danguy5991.github.io/blackfoot-sounds/"
+              >https://danguy5991.github.io/blackfoot-sounds/</a
+            >
+          </p>
+          <p class="share-hint" id="sw-status" role="status"></p>
+        </div>
+        <figure class="qr-wrap">
+          <img
+            class="qr"
+            src="assets/qr-pages.png"
+            width="320"
+            height="320"
+            alt="QR code linking to https://danguy5991.github.io/blackfoot-sounds/"
+          />
+          <figcaption>Scan for Blackfoot Sounds</figcaption>
+        </figure>
+      </section>
+
+      <p class="footer-note">
+        Mic needs HTTPS (or localhost). If blocked, allow the microphone in the browser and try again.
+        Install from the browser menu after the page loads once.
+      </p>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
